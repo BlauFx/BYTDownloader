@@ -27,6 +27,7 @@ namespace BYTDownloader
         static void Main()
         {
             Console.Title = "BYTDownloader";
+            new License();
             CheckFFMPGEG();
         }
 
