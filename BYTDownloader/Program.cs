@@ -34,6 +34,7 @@ namespace BYTDownloader
         private static void CheckFFMPGEG()
         {
             var CurrentDirectory = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+
             if (!File.Exists(CurrentDirectory + "\\ffmpeg.exe"))
             {
                 Console.ForegroundColor = ConsoleColor.Red;
