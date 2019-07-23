@@ -41,11 +41,11 @@ namespace BYTDownloader
 
                 using (WebClient wc = new WebClient())
                 {
-                    wc.DownloadFile(new Uri("https://ffmpeg.zeranoe.com/builds/win64/static/ffmpeg-20190530-9c35285-win64-static.zip"), "FFMPEG.zip");
+                    wc.DownloadFile(new Uri("https://ffmpeg.zeranoe.com/builds/win64/static/ffmpeg-20190530-9c35285-win64-static.zip"), CurrentDirectory + "//FFMPEG.zip");
 
-                    Directory.CreateDirectory("temp");
-                    ZipFile.ExtractToDirectory("FFMPEG.zip", "./temp");
-                    File.Move("./temp/ffmpeg-20190530-9c35285-win64-static/bin/ffmpeg.exe", "./ffmpeg.exe");
+                    Directory.CreateDirectory(CurrentDirectory + "//temp");
+                    ZipFile.ExtractToDirectory(CurrentDirectory + "//FFMPEG.zip", CurrentDirectory + "//temp");
+                    File.Move(CurrentDirectory + "//temp/ffmpeg-20190530-9c35285-win64-static/bin/ffmpeg.exe", CurrentDirectory + "//ffmpeg.exe");
                 }
 
                 Console.WriteLine("ffmpeg.exe downloaded!");
@@ -53,14 +53,14 @@ namespace BYTDownloader
                 Console.Clear();
             }
 
-            if (File.Exists("./FFMPEG.zip"))
+            if (File.Exists(CurrentDirectory + "//FFMPEG.zip"))
             {
-                File.Delete("./FFMPEG.zip");
+                File.Delete(CurrentDirectory + "//FFMPEG.zip");
             }
 
-            if (Directory.Exists("temp"))
+            if (Directory.Exists(CurrentDirectory + "//temp"))
             {
-                DeleteDirectory("temp");
+                DeleteDirectory(CurrentDirectory + "//temp");
             }
             INI();
         }
