@@ -305,7 +305,7 @@ namespace BYTDownloader
                     {
                         var mediaStreamInfos = new MediaStreamInfo[] { audioStreamInfo };
 
-                        await converter.DownloadAndProcessMediaStreamsAsync(mediaStreamInfos, Path.Combine(path + "\\Playlist", string.Format("song{0}.mp4", (i + 1).ToString())), "mp4", pro2);
+                        await converter.DownloadAndProcessMediaStreamsAsync(mediaStreamInfos, Path.Combine(path + "\\Playlist", string.Format("song{0}.mp3", (i + 1).ToString())), "mp3", pro2);
                     }
                     catch (Exception e)
                     {
