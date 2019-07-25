@@ -21,7 +21,7 @@ namespace BYTDownloader
         private static int PlaylistMaxLength = 0;
 
         private static int Current = 0;
-        
+
         private static double Previous = 0;
 
         static void Main()
@@ -191,6 +191,13 @@ namespace BYTDownloader
 
         private static async void Download_SPECIFIC_PART_Playlist(int y)
         {
+            Console.WriteLine("Do you want the download it as a video or as a song?");
+
+            Console.WriteLine("1: Video");
+            Console.WriteLine("2: Song");
+
+            string Answer = Console.ReadLine();
+
             Console.WriteLine("URL: ");
             var url = Console.ReadLine();
             var id = YoutubeClient.ParsePlaylistId(url);
@@ -206,28 +213,49 @@ namespace BYTDownloader
 
             var audioStreamInfo = mediaStreamInfoSet.Audio.WithHighestBitrate();
 
-            try
+            if (int.Parse(Answer) == 1) //Video
             {
-                //var videoStreamInfo = mediaStreamInfoSet.Video.FirstOrDefault(s => s.Framerate == 60);
+                try
+                {
+                    var videoStreamInfo = mediaStreamInfoSet.Video
+                        .OrderByDescending(s => s.VideoQuality)
+                        .ThenByDescending(s => s.Framerate)
+                        .First();
 
-                var videoStreamInfo = mediaStreamInfoSet.Video
-                    .OrderByDescending(s => s.VideoQuality)
-                    .ThenByDescending(s => s.Framerate)
-                    .First();
+                    var mediaStreamInfos = new MediaStreamInfo[] { audioStreamInfo, videoStreamInfo };
 
-                var mediaStreamInfos = new MediaStreamInfo[] { audioStreamInfo, videoStreamInfo };
-
-                string path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-                await converter.DownloadAndProcessMediaStreamsAsync(mediaStreamInfos, path + "\\video.mp4", "mp4", pro);
+                    string path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+                    await converter.DownloadAndProcessMediaStreamsAsync(mediaStreamInfos, path + "\\video.mp4", "mp4", pro);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                }
             }
-            catch (Exception e)
+            else if (int.Parse(Answer) == 2)//Sound
             {
-                Console.WriteLine(e.Message);
+                try
+                {
+                    var mediaStreamInfos = new MediaStreamInfo[] { audioStreamInfo };
+                    string path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+                    await converter.DownloadAndProcessMediaStreamsAsync(mediaStreamInfos, path + "\\sound.mp3", "mp3", pro);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                }
             }
         }
 
         private static async void Download_WHOLE_Playlist()
         {
+            Console.WriteLine("Do you want the download it as a video or as a song?");
+
+            Console.WriteLine("1: Video");
+            Console.WriteLine("2: Song");
+
+            string Answer = Console.ReadLine();
+
             Console.WriteLine("URL: ");
             var url = Console.ReadLine();
             var id = YoutubeClient.ParsePlaylistId(url);
@@ -253,22 +281,36 @@ namespace BYTDownloader
 
                 var audioStreamInfo = mediaStreamInfoSet.Audio.WithHighestBitrate();
 
-                try
+                if (int.Parse(Answer) == 1) //Video
                 {
-                    // var videoStreamInfo = mediaStreamInfoSet.Video.FirstOrDefault(s => s.Framerate == 60);
+                    try
+                    {
+                        var videoStreamInfo = mediaStreamInfoSet.Video
+                            .OrderByDescending(s => s.VideoQuality)
+                            .ThenByDescending(s => s.Framerate)
+                            .First();
 
-                    var videoStreamInfo = mediaStreamInfoSet.Video
-                        .OrderByDescending(s => s.VideoQuality)
-                        .ThenByDescending(s => s.Framerate)
-                        .First();
+                        var mediaStreamInfos = new MediaStreamInfo[] { audioStreamInfo, videoStreamInfo };
 
-                    var mediaStreamInfos = new MediaStreamInfo[] { audioStreamInfo, videoStreamInfo };
-
-                    await converter.DownloadAndProcessMediaStreamsAsync(mediaStreamInfos, Path.Combine(path + "\\Playlist", string.Format("video{0}.mp4", (i + 1).ToString())), "mp4", pro2);
+                        await converter.DownloadAndProcessMediaStreamsAsync(mediaStreamInfos, Path.Combine(path + "\\Playlist", string.Format("video{0}.mp4", (i + 1).ToString())), "mp4", pro2);
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e.Message);
+                    }
                 }
-                catch (Exception e)
+                else if (int.Parse(Answer) == 2)//Sound
                 {
-                    Console.WriteLine(e.Message);
+                    try
+                    {
+                        var mediaStreamInfos = new MediaStreamInfo[] { audioStreamInfo };
+
+                        await converter.DownloadAndProcessMediaStreamsAsync(mediaStreamInfos, Path.Combine(path + "\\Playlist", string.Format("song{0}.mp4", (i + 1).ToString())), "mp4", pro2);
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e.Message);
+                    }
                 }
             }
         }
@@ -277,7 +319,7 @@ namespace BYTDownloader
         {
             string x = ((int)(progress * 100)).ToString();
             Console.Title = string.Format("BYTDownloader | {0}%", x);
-            
+
             if (x == "100")
             {
                 Run = CalcIfDoubleUsed(progress);
