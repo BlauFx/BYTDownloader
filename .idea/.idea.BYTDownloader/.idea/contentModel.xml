@@ -2,13 +2,16 @@
 <project version="4">
   <component name="ContentModelStore">
     <e p="C:\Users\Oxygen\.Rider2019.1\system\extResources" t="IncludeRecursive" />
-    <e p="C:\Users\Oxygen\.Rider2019.1\system\resharper-host\local\Transient\ReSharperHost\v191\SolutionCaches\_BYTDownloader.156568983.00" t="ExcludeRecursive" />
-    <e p="F:\DEV\[MINE]\[PRIVATE]\BYTDownloader" t="IncludeFlat">
+    <e p="C:\Users\Oxygen\.Rider2019.1\system\resharper-host\local\Transient\ReSharperHost\v191\SolutionCaches\_BYTDownloader.1687085982.00" t="ExcludeRecursive" />
+    <e p="F:\DEV\[MINE]\BYTDownloader" t="IncludeFlat">
       <e p="BYTDownloader" t="IncludeRecursive">
         <e p="bin" t="ExcludeRecursive" />
         <e p="BlauFx.ico" t="Include" />
         <e p="BYTDownloader.csproj" t="IncludeRecursive" />
         <e p="Converter.cs" t="Include" />
+        <e p="DownloadPlaylist.cs" t="Include" />
+        <e p="DownloadSong.cs" t="Include" />
+        <e p="DownloadVideo.cs" t="Include" />
         <e p="License.cs" t="Include" />
         <e p="obj" t="ExcludeRecursive">
           <e p="Debug" t="Include">
