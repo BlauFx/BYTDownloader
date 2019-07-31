@@ -31,6 +31,11 @@ namespace BYTDownloader
         {
             Console.WriteLine("URL: ");
             var url = Console.ReadLine();
+            
+            Console.Clear();
+            
+            Console.WriteLine("Download has started!");
+            
             var id = YoutubeClient.ParseVideoId(url);
 
             var client = new YoutubeClient();
@@ -113,6 +118,7 @@ namespace BYTDownloader
             }
             else
             {
+                Files = 0;
                 TmpTitle = name;
             }
         }

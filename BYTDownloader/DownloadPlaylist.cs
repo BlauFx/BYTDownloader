@@ -50,17 +50,29 @@ namespace BYTDownloader
         
         private async void DPlaylist_SPECIFIC_PART_Playlist()
         {
+            Console.Clear();
+            
+            Console.WriteLine("URL: ");
+            var url = Console.ReadLine();
+            
+            Console.Clear();
+            
             Console.WriteLine("Which part in the playlist?");
             int part = int.Parse(Console.ReadLine());
             
-            Console.WriteLine("Do you want to download it as a video or as a song?");
+            Console.Clear();
+            
+            Console.WriteLine("Do you want the download it as a video or as a song?");
+            
             Console.WriteLine("1: Video");
             Console.WriteLine("2: Song");
 
             string answer = Console.ReadLine();
-
-            Console.WriteLine("URL: ");
-            var url = Console.ReadLine();
+            
+            Console.Clear();
+            
+            Console.WriteLine("Download has started!");
+            
             var id = YoutubeClient.ParsePlaylistId(url);
 
             var client = new YoutubeClient();
@@ -134,15 +146,24 @@ namespace BYTDownloader
 
         private async void DPlaylist_WHOLE_Playlist()
         {
+            Console.Clear();
+            
+            Console.WriteLine("URL: ");
+            var url = Console.ReadLine();
+            
+            Console.Clear();
+            
             Console.WriteLine("Do you want the download it as a video or as a song?");
-
+            
             Console.WriteLine("1: Video");
             Console.WriteLine("2: Song");
 
             string Answer = Console.ReadLine();
-
-            Console.WriteLine("URL: ");
-            var url = Console.ReadLine();
+            
+            Console.Clear();
+            
+            Console.WriteLine("Download has started!");
+            
             var id = YoutubeClient.ParsePlaylistId(url);
 
             var client = new YoutubeClient();
