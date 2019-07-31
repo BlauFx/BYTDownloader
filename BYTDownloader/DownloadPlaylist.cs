@@ -249,6 +249,8 @@ namespace BYTDownloader
         
         private string ENGAlphabet(string tit)
         {
+            char[] list = "ABCDEFGHIJKLMNOPQRSTUVWXYZ()$.-".ToCharArray();
+            
             List<string> tmp = new List<string>();
             string titel = string.Empty;
             
@@ -256,8 +258,9 @@ namespace BYTDownloader
             {
                 bool result = x.ToString().Any(x => char.IsLetterOrDigit(x));
                 bool result2 = x.ToString().Any(x => char.IsWhiteSpace(x));
+                bool result3 = list.Any(s=>s.ToString().Contains(x));
 
-                if (result || result2)
+                if (result || result2 || result3)
                 {
                     tmp.Add(x.ToString());
                 }
