@@ -119,5 +119,6 @@ namespace BYTDownloader
     {
         Mp3,
         Mp4,
+        wav,
     }
 }
