@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Security.Cryptography.X509Certificates;
 using MediaToolkit;
 using MediaToolkit.Model;
 using MediaToolkit.Options;
@@ -25,13 +26,15 @@ namespace BYTDownloader
 
             string x = Console.ReadLine();
 
-            var inputFile = new MediaFile { Filename = x };
+            string x2 = Fixinput(x);
+
+            var inputFile = new MediaFile { Filename = x2 };
 
             Console.Write("Fomat: ");
 
             var format = Console.ReadLine();
 
-            var outputFile = new MediaFile { Filename = string.Format(@"{0}\{1}.{2}", GetFileDir(x), GetOutputName(x,format), format) };
+            var outputFile = new MediaFile { Filename = string.Format(@"{0}\{1}.{2}", GetFileDir(x2), GetOutputName(x2,format), format) };
 
             var conversionOptions = new ConversionOptions
             {
@@ -57,6 +60,29 @@ namespace BYTDownloader
             {
                 Console.WriteLine("Could not create new file\n");
                 Console.WriteLine("Possible errors: \ninput file does not exist / is not an audio/video file\nformat is wrong");
+            }
+        }
+
+        private string Fixinput(string input)
+        {
+            if (input.StartsWith("\"") && input.EndsWith("\""))
+            {
+                string str = input.Substring(1, input.Length - 2);
+                return str;
+            }
+            else if (input.StartsWith("\"") && !(input.EndsWith("\"")))
+            {
+                string str = input.Substring(1, input.Length - 1);
+                return str;
+            }
+            else if (input.EndsWith("\"") && !(input.StartsWith("\"")))
+            {
+                string str = input.Substring(0, input.Length - 1);
+                return str;
+            }
+            else
+            {
+                return input;
             }
         }
 
