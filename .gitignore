@@ -351,3 +351,4 @@ MigrationBackup/
 
 # JetBrains Rider
 .idea/.idea.BYTDownloader/.idea/*.xml
+.idea/.idea.BYTDownloader/riderModule.iml
