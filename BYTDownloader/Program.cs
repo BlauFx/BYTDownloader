@@ -118,7 +118,6 @@ namespace BYTDownloader
                 else if (int.Parse(y) == 2)
                 {
                     new DownloadPlaylist(false);
-//                    Download_WHOLE_Playlist();
                 }
             }
             else if (uint.Parse(x) == 4)

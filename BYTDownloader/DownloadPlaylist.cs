@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using YoutubeExplode;
 using YoutubeExplode.Converter;
 using YoutubeExplode.Models.MediaStreams;
@@ -131,15 +132,104 @@ namespace BYTDownloader
             }
         }
 
-        private void DPlaylist_WHOLE_Playlist()
+        private async void DPlaylist_WHOLE_Playlist()
         {
+            Console.WriteLine("Do you want the download it as a video or as a song?");
+
+            Console.WriteLine("1: Video");
+            Console.WriteLine("2: Song");
+
+            string Answer = Console.ReadLine();
+
+            Console.WriteLine("URL: ");
+            var url = Console.ReadLine();
+            var id = YoutubeClient.ParsePlaylistId(url);
+
+            var client = new YoutubeClient();
+            var converter = new YoutubeConverter(client);
+
+            var playlist = await client.GetPlaylistAsync(id);
+
+            string path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
             
+            if (!(Directory.Exists(path + "\\Playlist")))
+            {
+                Directory.CreateDirectory(path + "\\Playlist");
+            }
+
+            PlaylistMaxLength = playlist.Videos.Count;
+
+            for (int i = 0; i < playlist.Videos.Count; i++)
+            {
+                var video = playlist.Videos.ElementAt(i).Id;
+
+                var mediaStreamInfoSet = await client.GetVideoMediaStreamInfosAsync(video);
+
+                var audioStreamInfo = mediaStreamInfoSet.Audio.WithHighestBitrate();
+
+                if (int.Parse(Answer) == 1) //Video
+                {
+                    try
+                    {
+                        var title1 = await client.GetVideoAsync(video);
+                        string title = ENGAlphabet(title1.Title);
+                        
+                        var videoStreamInfo = mediaStreamInfoSet.Video
+                            .OrderByDescending(s => s.VideoQuality)
+                            .ThenByDescending(s => s.Framerate)
+                            .First();
+
+                        var mediaStreamInfos = new MediaStreamInfo[] { audioStreamInfo, videoStreamInfo };
+
+                        string tit = CheckIfAvailableName(path + "\\Playlist", title, Format.Mp4);
+                
+                        try
+                        {
+                            await converter.DownloadAndProcessMediaStreamsAsync(mediaStreamInfos, path + $"\\Playlist\\{tit}.mp4", "mp4", pro2);
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e);
+                        }
+                        
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e.Message);
+                    }
+                }
+                else if (int.Parse(Answer) == 2)//Sound
+                {
+                    try
+                    {
+                        var title1 = await client.GetVideoAsync(video);
+                        string title = ENGAlphabet(title1.Title);
+
+                        var mediaStreamInfos = new MediaStreamInfo[] { audioStreamInfo };
+                    
+                        string tit = CheckIfAvailableName(path + "\\Playlist", title, Format.Mp3);
+                
+                        try
+                        {
+                            await converter.DownloadAndProcessMediaStreamsAsync(mediaStreamInfos, path + $"\\Playlist\\{tit}.mp3", "mp3", pro2);
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e.Message);
+                    }
+                }
+            }
         }
         
         private string ENGAlphabet(string tit)
         {
             List<string> tmp = new List<string>();
-            string Titel = string.Empty;
+            string titel = string.Empty;
             
             foreach (var x in tit)
             {
@@ -158,10 +248,10 @@ namespace BYTDownloader
             
             foreach (var x in tmp)
             {
-                Titel += x;
+                titel += x;
             }
             
-            return Titel;
+            return titel;
         }
 
         private string CheckIfAvailableName(string path, string name, Format format = Format.Mp3)
@@ -183,6 +273,7 @@ namespace BYTDownloader
             }
             else
             {
+                Files = 0;
                 TmpTitle = name;
             }
         }
@@ -193,7 +284,7 @@ namespace BYTDownloader
             {
                 int i = str.IndexOf("(", StringComparison.Ordinal);
                 string j = str.Substring(0, i);
-                return $"{j} ({num})";
+                return $"{j}({num})";
             }
             
             return $"{str} ({num})";
