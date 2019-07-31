@@ -165,11 +165,4 @@ namespace BYTDownloader
             return false;
         }
     }
-
-    public enum Format
-    {
-        Mp3,
-        Mp4,
-        
-    }
 }
