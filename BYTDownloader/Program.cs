@@ -58,8 +58,9 @@ namespace BYTDownloader
             Console.WriteLine("1: Video");
             Console.WriteLine("2: Song");
             Console.WriteLine("3: Playlist");
+            Console.WriteLine("4: Add stuff to queue");
             Console.WriteLine("------------");
-            Console.WriteLine("4: Converter");
+            Console.WriteLine("5: Converter");
             Console.WriteLine("------------");
 
             var x = Console.ReadLine();
@@ -89,6 +90,10 @@ namespace BYTDownloader
                 }
             }
             else if (uint.Parse(x) == 4)
+            {
+                new Queue();
+            }
+            else if (uint.Parse(x) == 5)
             {
                 new Converter();
             }
