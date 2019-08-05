@@ -70,7 +70,7 @@ namespace BYTDownloader
             }
             else if (uint.Parse(x) == 2)
             {
-               new DownloadSong();
+                new DownloadSong();
             }
             else if (uint.Parse(x) == 3)
             {

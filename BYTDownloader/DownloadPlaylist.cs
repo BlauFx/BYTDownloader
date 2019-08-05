@@ -25,7 +25,9 @@ namespace BYTDownloader
         private string TmpTitle = string.Empty;
         
         private int Files = 0;
-        
+
+        private string LastStr = string.Empty;
+
         public DownloadPlaylist(bool specificPart)
         {
             pro = new Progress<double>(HandleProgress);
@@ -69,31 +71,63 @@ namespace BYTDownloader
             string answer = Console.ReadLine();
             
             Console.Clear();
-            
-            Console.WriteLine("Download has started!");
-            
+
+            Console.Title = "BYTDownloader | Loading...";
+
             var id = YoutubeClient.ParsePlaylistId(url);
 
             var client = new YoutubeClient();
             var converter = new YoutubeConverter(client);
 
-            var playlist = await client.GetPlaylistAsync(id);
+            var playlist = client.GetPlaylistAsync(id).Result;
             var video = playlist.Videos.ElementAt(part - 1).Id;
 
-            var mediaStreamInfoSet = await client.GetVideoMediaStreamInfosAsync(video);
-            var audioStreamInfo = mediaStreamInfoSet.Audio.WithHighestBitrate();
+            MediaStreamInfoSet mediaStreamInfoSet = client.GetVideoMediaStreamInfosAsync(video).Result;
+            AudioStreamInfo audioStreamInfo = mediaStreamInfoSet.Audio.WithHighestBitrate();
 
             if (int.Parse(answer) == 1) //Video
             {
+                Console.WriteLine("In which resolution do you want to download the video?");
+                Console.WriteLine("Type the Number that is displayed before the resolution / fps");
+
                 try
                 {
-                    var title1 = await client.GetVideoAsync(video);
+                    var title1 = client.GetVideoAsync(video).Result;
                     string title = ENGAlphabet(title1.Title);
-                    
-                    var videoStreamInfo = mediaStreamInfoSet.Video
-                        .OrderByDescending(s => s.VideoQuality)
-                        .ThenByDescending(s => s.Framerate)
-                        .First();
+
+                    int counter = 1;
+
+                    string x = string.Empty;
+                    string y = string.Empty;
+
+                    VideoStreamInfo[] videoStream = new VideoStreamInfo[mediaStreamInfoSet.GetAll().Count()];
+
+                    foreach (var info in mediaStreamInfoSet.Video.OrderByDescending(s => s.VideoQuality)
+                        .ThenByDescending(s => s.Framerate))
+                    {
+                        x = QualityCut(info.VideoQuality.ToString());
+                        y = info.Framerate.ToString();
+                        string z = x + "p" + y;
+
+                        if (LastStr != z)
+                        {
+                            LastStr = z;
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.Write(counter.ToString() + ": ");
+                            Console.ResetColor();
+                            Console.WriteLine(z);
+
+                            counter++;
+                            videoStream[counter - 2] = info;
+                        }
+                    }
+
+                    Console.Write("Your answer: ");
+                    var input = Console.ReadLine();
+
+                    var videoStreamInfo = videoStream[int.Parse(input) - 1];
+
+                    Console.Title = "BYTDownloader";
 
                     var mediaStreamInfos = new MediaStreamInfo[] { audioStreamInfo, videoStreamInfo };
 
@@ -103,6 +137,7 @@ namespace BYTDownloader
                 
                     try
                     {
+                        Console.WriteLine("Download has started!");
                         await converter.DownloadAndProcessMediaStreamsAsync(mediaStreamInfos, path + $"\\{tit}.mp4", "mp4", pro);
                     }
                     catch (Exception e)
@@ -119,7 +154,7 @@ namespace BYTDownloader
             {
                 try
                 {
-                    var title1 = await client.GetVideoAsync(video);
+                    var title1 = client.GetVideoAsync(video).Result;
                     string title = ENGAlphabet(title1.Title);
 
                     var mediaStreamInfos = new MediaStreamInfo[] { audioStreamInfo };
@@ -129,6 +164,8 @@ namespace BYTDownloader
                 
                     try
                     {
+                        Console.Title = "BYTDownloader";
+                        Console.WriteLine("Download has started!");
                         await converter.DownloadAndProcessMediaStreamsAsync(mediaStreamInfos, path + $"\\{tit}.mp3", "mp3", pro);
                     }
                     catch (Exception e)
@@ -156,19 +193,17 @@ namespace BYTDownloader
             
             Console.WriteLine("1: Video");
             Console.WriteLine("2: Song");
-
-            string Answer = Console.ReadLine();
+            
+            string answer = Console.ReadLine();
             
             Console.Clear();
-            
-            Console.WriteLine("Download has started!");
             
             var id = YoutubeClient.ParsePlaylistId(url);
 
             var client = new YoutubeClient();
             var converter = new YoutubeConverter(client);
 
-            var playlist = await client.GetPlaylistAsync(id);
+            var playlist = client.GetPlaylistAsync(id).Result;
 
             string path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
             
@@ -177,27 +212,104 @@ namespace BYTDownloader
                 Directory.CreateDirectory(path + "\\Playlist");
             }
 
+            int answer2AsInt = 0;
+
+            if (int.Parse(answer) == 1)
+            {
+                Console.WriteLine("You have these options in which the quality of the playlist should be downloaded:\n" +
+                                  "1: Best quality\n2: Middle quality\n3: worst quality\n4: Set manually for each video the quality");
+            
+                Console.Write("Your answer: ");
+
+                string answer2 = Console.ReadLine();
+                answer2AsInt = int.Parse(answer2);
+            }
+
             PlaylistMaxLength = playlist.Videos.Count;
 
             for (int i = 0; i < playlist.Videos.Count; i++)
             {
                 var video = playlist.Videos.ElementAt(i).Id;
 
-                var mediaStreamInfoSet = await client.GetVideoMediaStreamInfosAsync(video);
+                var mediaStreamInfoSet = client.GetVideoMediaStreamInfosAsync(video).Result;
 
                 var audioStreamInfo = mediaStreamInfoSet.Audio.WithHighestBitrate();
 
-                if (int.Parse(Answer) == 1) //Video
+                if (int.Parse(answer) == 1) //Video
                 {
                     try
                     {
-                        var title1 = await client.GetVideoAsync(video);
+                        var title1 = client.GetVideoAsync(video).Result;
                         string title = ENGAlphabet(title1.Title);
+
+                        int counter = 1;
+
+                        string x = string.Empty;
+                        string y = string.Empty;
+
+                        var videoStreamInfo = mediaStreamInfoSet.Video.First();
                         
-                        var videoStreamInfo = mediaStreamInfoSet.Video
-                            .OrderByDescending(s => s.VideoQuality)
-                            .ThenByDescending(s => s.Framerate)
-                            .First();
+                        if (answer2AsInt == 1)
+                        {
+                            videoStreamInfo = mediaStreamInfoSet.Video.OrderByDescending(s => s.VideoQuality)
+                                .ThenByDescending(s => s.Framerate).First();
+                        }
+                        else if (answer2AsInt == 2)
+                        {
+                            var tmp = mediaStreamInfoSet.Video.OrderByDescending(s => s.VideoQuality)
+                                .ThenByDescending(s => s.Framerate);
+
+                            int tmp2 = tmp.Count();
+
+                            if (tmp2 > 3)
+                            {
+                                videoStreamInfo = tmp.ElementAt((int) Math.Ceiling((decimal) (tmp2 / (decimal) 1.25)));
+                            }
+                            else if (tmp2 > 2)
+                            {
+                                videoStreamInfo = tmp.ElementAt(2);
+                            }
+                            else
+                            {
+                                videoStreamInfo = tmp.First();
+                            }
+                        }
+                        else if (answer2AsInt == 3)
+                        {
+                            videoStreamInfo = mediaStreamInfoSet.Video.OrderByDescending(s => s.VideoQuality)
+                                .ThenByDescending(s => s.Framerate).Last();
+                        }
+                        else if (answer2AsInt == 4)
+                        {
+                            VideoStreamInfo[] videoStream = new VideoStreamInfo[mediaStreamInfoSet.GetAll().Count()];
+
+                            foreach (var info in mediaStreamInfoSet.Video.OrderByDescending(s => s.VideoQuality)
+                                .ThenByDescending(s => s.Framerate))
+                            {
+                                x = QualityCut(info.VideoQuality.ToString());
+                                y = info.Framerate.ToString();
+                                string z = x + "p" + y;
+
+                                if (LastStr != z)
+                                {
+                                    LastStr = z;
+                                    Console.ForegroundColor = ConsoleColor.Red;
+                                    Console.Write(counter.ToString() + ": ");
+                                    Console.ResetColor();
+                                    Console.WriteLine(z);
+
+                                    counter++;
+                                    videoStream[counter - 2] = info;
+                                }
+                            }
+
+                            Console.Write("Your answer: ");
+                            var input = Console.ReadLine();
+
+                            videoStreamInfo = videoStream[int.Parse(input) - 1];
+                        }
+                        
+                        Console.Title = "BYTDownloader";
 
                         var mediaStreamInfos = new MediaStreamInfo[] { audioStreamInfo, videoStreamInfo };
 
@@ -210,15 +322,15 @@ namespace BYTDownloader
                         catch (Exception e)
                         {
                             Console.WriteLine(e);
+                            Console.ReadLine();
                         }
-                        
                     }
                     catch (Exception e)
                     {
                         Console.WriteLine(e.Message);
                     }
                 }
-                else if (int.Parse(Answer) == 2)//Sound
+                else if (int.Parse(answer) == 2)//Sound
                 {
                     try
                     {
@@ -245,7 +357,31 @@ namespace BYTDownloader
                 }
             }
         }
-        
+
+        private string QualityCut(string str)
+        {
+            List<string> tmp = new List<string>();
+
+            string y = string.Empty;
+            foreach (var x in str)
+            {
+                bool isNum = int.TryParse(x.ToString(), out int n);
+                if (isNum)
+                {
+                    tmp.Add(x.ToString());
+                }
+            }
+
+            for (int i = 0;
+                i < tmp.Count;
+                i++)
+            {
+                y += tmp[i];
+            }
+
+            return y;
+        }
+
         private string ENGAlphabet(string tit)
         {
             char[] list = "ABCDEFGHIJKLMNOPQRSTUVWXYZ()$.-".ToCharArray();
