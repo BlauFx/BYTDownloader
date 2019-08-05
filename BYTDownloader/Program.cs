@@ -51,8 +51,6 @@ namespace BYTDownloader
             INI();
         }
 
-      
-
         private static void INI()
         {
             Console.WriteLine("1: Video");
