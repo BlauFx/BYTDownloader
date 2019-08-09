@@ -258,16 +258,29 @@ namespace BYTDownloader
                         {
                             var tmp = mediaStreamInfoSet.Video.OrderByDescending(s => s.VideoQuality)
                                 .ThenByDescending(s => s.Framerate);
-
+                            
                             int tmp2 = tmp.Count();
-
+                            
                             if (tmp2 > 3)
                             {
-                                videoStreamInfo = tmp.ElementAt((int) Math.Ceiling((decimal) (tmp2 / (decimal) 1.25)));
+                                int calc = (int) Math.Round((decimal) (tmp2 / (decimal) 2.5f), MidpointRounding.AwayFromZero);
+                                if (calc < 1)
+                                {
+                                    calc = 1;
+                                }
+                                videoStreamInfo = tmp.ElementAt(calc);
+
+                                int Whilecounter = calc;
+                                
+                                while (videoStreamInfo.VideoQuality < VideoQuality.High720) //TODO: Check if High720 does even exists 
+                                {
+                                    Whilecounter++;
+                                    videoStreamInfo = tmp.ElementAt(Whilecounter);
+                                }
                             }
                             else if (tmp2 > 2)
                             {
-                                videoStreamInfo = tmp.ElementAt(2);
+                                videoStreamInfo = tmp.ElementAt(2); //TODO: Side note check pos /vid quality @ element 
                             }
                             else
                             {

@@ -33,6 +33,8 @@ namespace BYTDownloader
 
         private async void DQueue(List<string> list)
         {
+            Console.Clear();
+            
             Console.WriteLine("Do you want the download it as a video or as a song?");
 
             Console.WriteLine("1: Video");
@@ -67,7 +69,6 @@ namespace BYTDownloader
                             .OrderByDescending(s => s.VideoQuality)
                             .ThenByDescending(s => s.Framerate)
                             .First();
-
 
                         var mediaStreamInfos = new MediaStreamInfo[] {audioStreamInfo, videoStreamInfo};
 
