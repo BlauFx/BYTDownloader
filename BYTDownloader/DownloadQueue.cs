@@ -24,6 +24,8 @@ namespace BYTDownloader
 
         private int Files = 0;
 
+        private string LastStr = string.Empty;
+
         public DownloadQueue(List<string> list)
         {
             pro2 = new Progress<double>(HandleProgress2);
@@ -43,6 +45,18 @@ namespace BYTDownloader
             string answer = Console.ReadLine();
 
             Console.Clear();
+
+            int answer2AsInt = 0;
+            if (int.Parse(answer) == 1)
+            {
+                Console.WriteLine("You have these options in which the quality of the playlist should be downloaded:\n" +
+                                  "1: Best quality\n2: worst quality\n3: Set manually for each video the quality");
+
+                Console.Write("Your answer: ");
+
+                string answer2 = Console.ReadLine();
+                answer2AsInt = int.Parse(answer2);
+            }
 
             Console.WriteLine("Download has started!");
 
@@ -65,10 +79,48 @@ namespace BYTDownloader
                         var title1 = await client.GetVideoAsync(id);
                         string title = ENGAlphabet(title1.Title);
 
-                        var videoStreamInfo = mediaStreamInfoSet.Video
-                            .OrderByDescending(s => s.VideoQuality)
-                            .ThenByDescending(s => s.Framerate)
-                            .First();
+                        int counter = 1;
+
+                        string x = string.Empty;
+                        string y = string.Empty;
+
+                        var videoStreamInfo = mediaStreamInfoSet.Video.OrderByDescending(s => s.VideoQuality)
+                            .ThenByDescending(s => s.Framerate).First();
+
+                        if (answer2AsInt == 2)
+                        {
+                            videoStreamInfo = mediaStreamInfoSet.Video.OrderByDescending(s => s.VideoQuality)
+                                .ThenByDescending(s => s.Framerate).Last();
+                        }
+                        else if (answer2AsInt == 3)
+                        {
+                            VideoStreamInfo[] videoStream = new VideoStreamInfo[mediaStreamInfoSet.GetAll().Count()];
+
+                            foreach (var info in mediaStreamInfoSet.Video.OrderByDescending(s => s.VideoQuality)
+                                .ThenByDescending(s => s.Framerate))
+                            {
+                                x = QualityCut(info.VideoQuality.ToString());
+                                y = info.Framerate.ToString();
+                                string z = x + "p" + y;
+
+                                if (LastStr != z)
+                                {
+                                    LastStr = z;
+                                    Console.ForegroundColor = ConsoleColor.Red;
+                                    Console.Write(counter.ToString() + ": ");
+                                    Console.ResetColor();
+                                    Console.WriteLine(z);
+
+                                    counter++;
+                                    videoStream[counter - 2] = info;
+                                }
+                            }
+
+                            Console.Write("Your answer: ");
+                            var input = Console.ReadLine();
+
+                            videoStreamInfo = videoStream[int.Parse(input) - 1];
+                        }
 
                         var mediaStreamInfos = new MediaStreamInfo[] {audioStreamInfo, videoStreamInfo};
 
@@ -120,6 +172,30 @@ namespace BYTDownloader
                     }
                 }
             }
+        }
+
+        private string QualityCut(string str)
+        {
+            List<string> tmp = new List<string>();
+
+            string y = string.Empty;
+            foreach (var x in str)
+            {
+                bool isNum = int.TryParse(x.ToString(), out int n);
+                if (isNum)
+                {
+                    tmp.Add(x.ToString());
+                }
+            }
+
+            for (int i = 0;
+                i < tmp.Count;
+                i++)
+            {
+                y += tmp[i];
+            }
+
+            return y;
         }
 
         private string ENGAlphabet(string tit)

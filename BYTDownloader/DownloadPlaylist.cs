@@ -217,7 +217,7 @@ namespace BYTDownloader
             if (int.Parse(answer) == 1)
             {
                 Console.WriteLine("You have these options in which the quality of the playlist should be downloaded:\n" +
-                                  "1: Best quality\n2: Middle quality\n3: worst quality\n4: Set manually for each video the quality");
+                                  "1: Best quality\n2: worst quality\n3: Set manually for each video the quality");
             
                 Console.Write("Your answer: ");
 
@@ -256,43 +256,10 @@ namespace BYTDownloader
                         }
                         else if (answer2AsInt == 2)
                         {
-                            var tmp = mediaStreamInfoSet.Video.OrderByDescending(s => s.VideoQuality)
-                                .ThenByDescending(s => s.Framerate);
-                            
-                            int tmp2 = tmp.Count();
-                            
-                            if (tmp2 > 3)
-                            {
-                                int calc = (int) Math.Round((decimal) (tmp2 / (decimal) 2.5f), MidpointRounding.AwayFromZero);
-                                if (calc < 1)
-                                {
-                                    calc = 1;
-                                }
-                                videoStreamInfo = tmp.ElementAt(calc);
-
-                                int Whilecounter = calc;
-                                
-                                while (videoStreamInfo.VideoQuality < VideoQuality.High720) //TODO: Check if High720 does even exists 
-                                {
-                                    Whilecounter++;
-                                    videoStreamInfo = tmp.ElementAt(Whilecounter);
-                                }
-                            }
-                            else if (tmp2 > 2)
-                            {
-                                videoStreamInfo = tmp.ElementAt(2); //TODO: Side note check pos /vid quality @ element 
-                            }
-                            else
-                            {
-                                videoStreamInfo = tmp.First();
-                            }
-                        }
-                        else if (answer2AsInt == 3)
-                        {
                             videoStreamInfo = mediaStreamInfoSet.Video.OrderByDescending(s => s.VideoQuality)
                                 .ThenByDescending(s => s.Framerate).Last();
                         }
-                        else if (answer2AsInt == 4)
+                        else if (answer2AsInt == 3)
                         {
                             VideoStreamInfo[] videoStream = new VideoStreamInfo[mediaStreamInfoSet.GetAll().Count()];
 
