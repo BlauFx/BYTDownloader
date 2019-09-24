@@ -3,12 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Security.Cryptography.X509Certificates;
+using System.Threading;
 using MediaToolkit;
 using MediaToolkit.Model;
 using MediaToolkit.Options;
-using Microsoft.VisualBasic.ApplicationServices;
 
 namespace BYTDownloader
 {
@@ -53,7 +51,7 @@ namespace BYTDownloader
 
             if (File.Exists(outputFile.Filename))
             {
-                System.Threading.Thread.Sleep(100);
+                Thread.Sleep(100);
                 Console.WriteLine("Done");
             }
             else
@@ -181,7 +179,6 @@ namespace BYTDownloader
             }
             throw new NullReferenceException("string can not be null");
         }
-
 
         private void Engine_ConvertProgressEvent(object sender, ConvertProgressEventArgs e)
         {
