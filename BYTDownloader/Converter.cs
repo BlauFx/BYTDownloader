@@ -1,12 +1,11 @@
-﻿using System;
+﻿using FFmpeg.NET;
+using FFmpeg.NET.Enums;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
-using MediaToolkit;
-using MediaToolkit.Model;
-using MediaToolkit.Options;
 
 namespace BYTDownloader
 {
@@ -26,13 +25,13 @@ namespace BYTDownloader
 
             string x2 = Fixinput(x);
 
-            var inputFile = new MediaFile { Filename = x2 };
+            var inputFile = new MediaFile(x2);
 
             Console.Write("Fomat: ");
 
             var format = Console.ReadLine();
 
-            var outputFile = new MediaFile { Filename = string.Format(@"{0}\{1}.{2}", GetFileDir(x2), GetOutputName(x2,format), format) };
+            var outputFile = new MediaFile($"{GetFileDir(x2)}\\{GetOutputName(x2, format)}.{format}");
 
             var conversionOptions = new ConversionOptions
             {
@@ -41,15 +40,13 @@ namespace BYTDownloader
                 AudioSampleRate = AudioSampleRate.Hz48000,
             };
 
-            using (var engine = new Engine(string.Format("{0}\\ffmpeg.exe", Path.GetDirectoryName(Assembly.GetEntryAssembly().Location))))
-            {
-                engine.ConvertProgressEvent += Engine_ConvertProgressEvent;
-                engine.Convert(inputFile, outputFile, conversionOptions);
-            }
+            var ffmpeg = new Engine($"{Path.GetDirectoryName(Assembly.GetEntryAssembly().Location)}\\ffmpeg.exe");
+            ffmpeg.Progress += Engine_ConvertProgressEvent;
+            _ = ffmpeg.ConvertAsync(inputFile, outputFile, conversionOptions).Result;
 
             Console.ForegroundColor = ConsoleColor.Red;
 
-            if (File.Exists(outputFile.Filename))
+            if (File.Exists(outputFile.FileInfo.FullName))
             {
                 Thread.Sleep(100);
                 Console.WriteLine("Done");
@@ -180,13 +177,7 @@ namespace BYTDownloader
             throw new NullReferenceException("string can not be null");
         }
 
-        private void Engine_ConvertProgressEvent(object sender, ConvertProgressEventArgs e)
-        {
-            Console.ForegroundColor = ConsoleColor.Red;
-
-            int percentComplete = (int)Math.Round((double)(100 * (double)e.ProcessedDuration.Ticks) / e.TotalDuration.Ticks);
-
-            Console.WriteLine("{0}%", percentComplete.ToString());
-        }
+        private void Engine_ConvertProgressEvent(object sender, FFmpeg.NET.Events.ConversionProgressEventArgs e)
+            => Console.WriteLine("{0}%", ((int)Math.Round((double)(100 * (double)e.ProcessedDuration.Ticks) / e.TotalDuration.Ticks)).ToString());
     }
 }
