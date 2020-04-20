@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Net;
+using System.Net.Http;
 using System.Reflection;
 
 namespace BYTDownloader
@@ -16,11 +17,11 @@ namespace BYTDownloader
         {
             license_in_folder = new string[license.Length];
             missing_licenses = new string[license.Length];
-            
+
             license[0] = "BYTDownloader";
             license[1] = "YoutubeExplode";
             license[2] = "YoutubeExplode.Converter";
-            license[3] = "MediaToolkit";
+            license[3] = "FFmpeg.NET";
 
             number = Count_Licenses();
 
@@ -97,29 +98,20 @@ namespace BYTDownloader
             Directory.CreateDirectory(download_path);
 
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
-            using (WebClient wc = new WebClient())
+
+            Console.WriteLine("Start downloading missing licenses");
+
+            for (int i = 0; i < missing_licenses.Length; i++)
             {
-                wc.Proxy = null;
-
-                int download_number = 0;
-                
-                Console.WriteLine("Start downloading missing licenses");
-                
-                while (download_number < missing_licenses.Length)
+                try
                 {
-                    try
-                    {
-                        string file = wc.DownloadString(new Uri(string.Format("https://raw.githubusercontent.com/BlauFx/BYTDownloader/master/Licenses/{0}.txt", missing_licenses[download_number])));
-                        using (StreamWriter strm = new StreamWriter(string.Format(Path.Combine(download_path, "{0}.txt"), missing_licenses[download_number])))
-                        {
-                            strm.WriteLine(file);
-                        }
-                    }
-                    catch { }
-
-                    download_number++;
+                    using var fs = new FileStream(string.Format(Path.Combine(download_path, "{0}.txt"), missing_licenses[i]), FileMode.CreateNew);
+                    using HttpClient httpClient = new HttpClient();
+                    httpClient.GetStreamAsync($"https://raw.githubusercontent.com/BlauFx/BYTDownloader/master/Licenses/{missing_licenses[i]}.txt").Result.CopyTo(fs);
                 }
+                catch { }
             }
+
             Console.Clear();
         }
     }
