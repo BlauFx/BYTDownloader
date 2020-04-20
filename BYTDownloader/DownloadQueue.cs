@@ -1,17 +1,41 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
+using System.Threading;
 using YoutubeExplode;
 using YoutubeExplode.Converter;
-using YoutubeExplode.Models.MediaStreams;
+using YoutubeExplode.Videos.Streams;
 
 namespace BYTDownloader
 {
-    public class DownloadQueue
+    public class Queue
     {
-        private bool Run = false;
+        public Queue()
+        {
+            Console.WriteLine("Add links to the queue!");
+            Console.WriteLine("If you're done than type: Done");
 
+            List<string> tmp = new List<string>();
+
+            while (true)
+            {
+                string y = Console.ReadLine();
+
+                if (!string.IsNullOrWhiteSpace(y))
+                {
+                    if (y.Contains("Done"))
+                        break;
+                    else
+                        tmp.Add(y);
+                }
+            }
+
+            new DownloadQueue(tmp);
+        }
+    }
+
+    internal class DownloadQueue
+    {
         private IProgress<double> pro2;
 
         private int ListMaxLength = 0;
@@ -19,12 +43,6 @@ namespace BYTDownloader
         private int Current = 0;
 
         private double Previous = 0;
-
-        private string TmpTitle = string.Empty;
-
-        private int Files = 0;
-
-        private string LastStr = string.Empty;
 
         public DownloadQueue(List<string> list)
         {
@@ -36,7 +54,7 @@ namespace BYTDownloader
         private async void DQueue(List<string> list)
         {
             Console.Clear();
-            
+
             Console.WriteLine("Do you want the download it as a video or as a song?");
 
             Console.WriteLine("1: Video");
@@ -53,90 +71,55 @@ namespace BYTDownloader
                                   "1: Best quality\n2: worst quality\n3: Set manually for each video the quality");
 
                 Console.Write("Your answer: ");
-
-                string answer2 = Console.ReadLine();
-                answer2AsInt = int.Parse(answer2);
+                answer2AsInt = int.Parse(Console.ReadLine());
             }
-
-            Console.WriteLine("Download has started!");
 
             ListMaxLength = list.Count;
 
             for (int i = 0; i < list.Count; i++)
             {
-                var id = YoutubeClient.ParseVideoId(list[i]);
-
                 var client = new YoutubeClient();
-                var converter = new YoutubeConverter(client);
 
-                var mediaStreamInfoSet = await client.GetVideoMediaStreamInfosAsync(id);
-                var audioStreamInfo = mediaStreamInfoSet.Audio.WithHighestBitrate();
+                var video = await client.Videos.GetAsync(list[i]);
+                var streamManifest = await client.Videos.Streams.GetManifestAsync(video.Id);
+
+                bool Mp4Mode = false;
+
+                var allqualities = streamManifest.GetVideoOnly().Where(x => x.Container.Name == "webm").GetAllVideoQualities().ToArray();
+
+                if (allqualities.Length == 0)
+                {
+                    Mp4Mode = true;
+                    allqualities = streamManifest.GetVideoOnly().Where(x => x.Container.Name == "mp4").GetAllVideoQualities().ToArray();
+                }
 
                 if (int.Parse(answer) == 1)
                 {
                     try
                     {
-                        var title1 = await client.GetVideoAsync(id);
-                        string title = ENGAlphabet(title1.Title);
+                        string title = SharedMethods.ENGAlphabet(video.Title);
 
-                        int counter = 1;
-
-                        string x = string.Empty;
-                        string y = string.Empty;
-
-                        var videoStreamInfo = mediaStreamInfoSet.Video.OrderByDescending(s => s.VideoQuality)
-                            .ThenByDescending(s => s.Framerate).First();
+                        IStreamInfo[] mediaStreamInfos = new IStreamInfo[]
+                        {
+                            streamManifest.GetAudioOnly().Where(x => x.Container.Name == (Mp4Mode ? "mp4" : "webm")).WithHighestBitrate(),
+                            streamManifest.GetVideoOnly().Where(x => x.Container.Name == (Mp4Mode ? "mp4" : "webm")).ToArray().OrderByDescending(c => c.Resolution).ThenByDescending(s => s.Framerate).First()
+                        };
 
                         if (answer2AsInt == 2)
-                        {
-                            videoStreamInfo = mediaStreamInfoSet.Video.OrderByDescending(s => s.VideoQuality)
-                                .ThenByDescending(s => s.Framerate).Last();
-                        }
+                            mediaStreamInfos[1] = streamManifest.GetVideoOnly().Where(x => x.Container.Name == (Mp4Mode ? "mp4" : "webm")).ToArray().OrderByDescending(c => c.Resolution).ThenByDescending(s => s.Framerate).Last();
                         else if (answer2AsInt == 3)
                         {
-                            VideoStreamInfo[] videoStream = new VideoStreamInfo[mediaStreamInfoSet.GetAll().Count()];
-
-                            foreach (var info in mediaStreamInfoSet.Video.OrderByDescending(s => s.VideoQuality)
-                                .ThenByDescending(s => s.Framerate))
-                            {
-                                x = QualityCut(info.VideoQuality.ToString());
-                                y = info.Framerate.ToString();
-                                string z = x + "p" + y;
-
-                                if (LastStr != z)
-                                {
-                                    LastStr = z;
-                                    Console.ForegroundColor = ConsoleColor.Red;
-                                    Console.Write(counter.ToString() + ": ");
-                                    Console.ResetColor();
-                                    Console.WriteLine(z);
-
-                                    counter++;
-                                    videoStream[counter - 2] = info;
-                                }
-                            }
+                            for (int j = 0; j < allqualities.Length; j++)
+                                Console.WriteLine($"{j}: {allqualities[j]}");
 
                             Console.Write("Your answer: ");
-                            var input = Console.ReadLine();
-
-                            videoStreamInfo = videoStream[int.Parse(input) - 1];
+                            mediaStreamInfos[1] = streamManifest.GetVideoOnly().Where(x => x.Container.Name == (Mp4Mode ? "mp4" : "webm")).ToArray()[int.Parse(Console.ReadLine())];
                         }
-
-                        var mediaStreamInfos = new MediaStreamInfo[] {audioStreamInfo, videoStreamInfo};
 
                         string path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+                        string tit = SharedMethods.CheckIfAvailableName(path, title, Format.Mp4);
 
-                        string tit = CheckIfAvailableName(path, title, Format.Mp4);
-
-                        try
-                        {
-                            await converter.DownloadAndProcessMediaStreamsAsync(mediaStreamInfos, path + $"\\{tit}.mp4",
-                                "mp4", pro2);
-                        }
-                        catch (Exception e)
-                        {
-                            Console.WriteLine(e);
-                        }
+                        await new YoutubeConverter(client).DownloadAndProcessMediaStreamsAsync(mediaStreamInfos, path + $"\\{tit}.mp4", "mp4", pro2);
                     }
                     catch (Exception e)
                     {
@@ -147,24 +130,12 @@ namespace BYTDownloader
                 {
                     try
                     {
-                        var title1 = await client.GetVideoAsync(id);
-                        string title = ENGAlphabet(title1.Title);
-
-                        var mediaStreamInfos = new MediaStreamInfo[] {audioStreamInfo};
+                        Console.Title = "BYTDownloader";
 
                         string path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+                        string tit = SharedMethods.CheckIfAvailableName(path, SharedMethods.ENGAlphabet(video.Title), Format.Mp3);
 
-                        string tit = CheckIfAvailableName(path, title, Format.Mp3);
-
-                        try
-                        {
-                            await converter.DownloadAndProcessMediaStreamsAsync(mediaStreamInfos, path + $"\\{tit}.mp3",
-                                "mp3", pro2);
-                        }
-                        catch (Exception e)
-                        {
-                            Console.WriteLine(e);
-                        }
+                        await client.Videos.Streams.DownloadAsync(streamManifest.GetAudioOnly().Where(x => x.Container.Name == (Mp4Mode ? "mp4" : "webm")).WithHighestBitrate(), $"{path}\\{tit}.mp3", pro2);
                     }
                     catch (Exception e)
                     {
@@ -174,108 +145,13 @@ namespace BYTDownloader
             }
         }
 
-        private string QualityCut(string str)
-        {
-            List<string> tmp = new List<string>();
-
-            string y = string.Empty;
-            foreach (var x in str)
-            {
-                bool isNum = int.TryParse(x.ToString(), out int n);
-                if (isNum)
-                {
-                    tmp.Add(x.ToString());
-                }
-            }
-
-            for (int i = 0;
-                i < tmp.Count;
-                i++)
-            {
-                y += tmp[i];
-            }
-
-            return y;
-        }
-
-        private string ENGAlphabet(string tit)
-        {
-            char[] list = "ABCDEFGHIJKLMNOPQRSTUVWXYZ()$.-".ToCharArray();
-
-            List<string> tmp = new List<string>();
-            string titel = string.Empty;
-
-            foreach (var x in tit)
-            {
-                bool result = x.ToString().Any(x => char.IsLetterOrDigit(x));
-                bool result2 = x.ToString().Any(x => char.IsWhiteSpace(x));
-                bool result3 = list.Any(s => s.ToString().Contains(x));
-
-                if (result || result2 || result3)
-                {
-                    tmp.Add(x.ToString());
-                }
-                else
-                {
-                    tmp.Add("#");
-                }
-            }
-
-            foreach (var x in tmp)
-            {
-                titel += x;
-            }
-
-            return titel;
-        }
-
-        private string CheckIfAvailableName(string path, string name, Format format = Format.Mp3)
-        {
-            if (File.Exists(path + $"\\{name}.{format}"))
-            {
-                CheckIfAvailableNameVoid(path, name, format);
-                return TmpTitle;
-            }
-
-            return name;
-        }
-
-        private void CheckIfAvailableNameVoid(string path, string name, Format format = Format.Mp3)
-        {
-            if (File.Exists(path + $"\\{name}.{format}"))
-            {
-                Files++;
-                CheckIfAvailableNameVoid(path, FileCutter(name, Files), format);
-            }
-            else
-            {
-                Files = 0;
-                TmpTitle = name;
-            }
-        }
-
-        private string FileCutter(string str, int num)
-        {
-            if (str.Contains("("))
-            {
-                int i = str.IndexOf("(", StringComparison.Ordinal);
-                string j = str.Substring(0, i);
-                return $"{j}({num})";
-            }
-
-            return $"{str} ({num})";
-        }
-
         private void HandleProgress2(double progress)
         {
-            string x = ((int) (progress * 100)).ToString();
+            string x = ((int)(progress * 100)).ToString();
             Console.Title = string.Format("BYTDownloader | {0}%", x);
 
-            Run = CalcIfDoubleUsed(progress);
-
-            if (Run)
+            if (CalcIfDoubleUsed(progress))
             {
-                Run = false;
                 Current++;
 
                 Console.WriteLine($"{Current} / {ListMaxLength}");
@@ -283,7 +159,7 @@ namespace BYTDownloader
                 if (Current == ListMaxLength)
                 {
                     Console.ForegroundColor = ConsoleColor.Red;
-                    System.Threading.Thread.Sleep(1000);
+                    Thread.Sleep(1000);
                     Console.WriteLine("Done");
                 }
             }
@@ -303,7 +179,6 @@ namespace BYTDownloader
             }
 
             Previous = progress;
-
             return false;
         }
     }
