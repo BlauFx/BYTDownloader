@@ -60,25 +60,13 @@ namespace BYTDownloader
 
         private string Fixinput(string input)
         {
-            if (input.StartsWith("\"") && input.EndsWith("\""))
-            {
-                string str = input.Substring(1, input.Length - 2);
-                return str;
-            }
-            else if (input.StartsWith("\"") && !(input.EndsWith("\"")))
-            {
-                string str = input.Substring(1, input.Length - 1);
-                return str;
-            }
-            else if (input.EndsWith("\"") && !(input.StartsWith("\"")))
-            {
-                string str = input.Substring(0, input.Length - 1);
-                return str;
-            }
-            else
-            {
-                return input;
-            }
+            if(input.StartsWith("\""))
+                input = input[1..];
+
+            if (input.EndsWith("\""))
+                input = input[0..^1];
+
+            return input;
         }
 
         private string GetFileDir(string inputFile)
