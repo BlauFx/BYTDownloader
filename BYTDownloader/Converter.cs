@@ -1,9 +1,8 @@
 ﻿using FFmpeg.NET;
 using FFmpeg.NET.Enums;
+using FFmpeg.NET.Events;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Threading;
 
@@ -11,26 +10,18 @@ namespace BYTDownloader
 {
     class Converter
     {
-        private string TmpTitle = string.Empty;
-
-        private int Files = 0;
-        
         public Converter()
         {
             Console.Title = "Converter";
-
             Console.Write("Input file: ");
 
             string x = Console.ReadLine();
-
             string x2 = Fixinput(x);
 
             var inputFile = new MediaFile(x2);
-
             Console.Write("Fomat: ");
 
             var format = Console.ReadLine();
-
             var outputFile = new MediaFile($"{GetFileDir(x2)}\\{GetOutputName(x2, format)}.{format}");
 
             var conversionOptions = new ConversionOptions
@@ -81,83 +72,19 @@ namespace BYTDownloader
         {
             int num = inputFile.LastIndexOf("\\", StringComparison.Ordinal)+1;
             int num2 = inputFile.LastIndexOf(".", StringComparison.Ordinal);
-            string str = inputFile.Substring(num,  num2 - num);
+            string str = inputFile.Substring(num, num2 - num);
             
-            string checkEng = EngAlphabet(str);
+            string checkEng = SharedMethods.ENGAlphabet(str);
 
-            Format fmr = parseFormat(format);
+            Format fmr = ParseFormat(format);
             
-            string finalstr = CheckIfAvailableName(GetFileDir(inputFile), checkEng, fmr);
+            string finalstr = SharedMethods.CheckIfAvailableName(GetFileDir(inputFile), checkEng, fmr);
             return finalstr;
         }
         
-        private string EngAlphabet(string tit)
+        private Format ParseFormat(string format)
         {
-            List<string> tmp = new List<string>();
-            string Titel = string.Empty;
-            
-            foreach (var x in tit)
-            {
-                bool result = x.ToString().Any(x => char.IsLetterOrDigit(x));
-                bool result2 = x.ToString().Any(x => char.IsWhiteSpace(x));
-
-                if (result || result2)
-                {
-                    tmp.Add(x.ToString());
-                }
-                else
-                {
-                    tmp.Add("#");
-                }
-            }
-            
-            foreach (var x in tmp)
-            {
-                Titel += x;
-            }
-            
-            return Titel;
-        }
-
-        private string CheckIfAvailableName(string path, string name, Format format = Format.Mp3)
-        {
-            if (File.Exists(path + $"\\{name}.{format}"))
-            {
-                CheckIfAvailableNameVoid(path, name, format);
-                return TmpTitle;
-            }
-            return name;
-        }
-
-        private void CheckIfAvailableNameVoid(string path, string name, Format format = Format.Mp3)
-        {
-            if (File.Exists(path + $"\\{name}.{format}"))
-            {
-                Files++;
-                CheckIfAvailableNameVoid(path, FileCutter(name,Files), format);
-            }
-            else
-            {
-                Files = 0;
-                TmpTitle = name;
-            }
-        }
-
-        private string FileCutter(string str, int num)
-        {
-            if (str.Contains("("))
-            {
-                int i = str.IndexOf("(", StringComparison.Ordinal);
-                string j = str.Substring(0, i);
-                return $"{j} ({num})";
-            }
-            
-            return $"{str} ({num})";
-        }
-        
-        private Format parseFormat(string format)
-        {
-            if (!(String.IsNullOrEmpty(format)))
+            if (!(string.IsNullOrEmpty(format)))
             {
                 Format dir = (Format)Enum.Parse(typeof(Format), format,true);
                 return dir;
@@ -165,7 +92,7 @@ namespace BYTDownloader
             throw new NullReferenceException("string can not be null");
         }
 
-        private void Engine_ConvertProgressEvent(object sender, FFmpeg.NET.Events.ConversionProgressEventArgs e)
-            => Console.WriteLine("{0}%", ((int)Math.Round((double)(100 * (double)e.ProcessedDuration.Ticks) / e.TotalDuration.Ticks)).ToString());
+        private void Engine_ConvertProgressEvent(object sender, ConversionProgressEventArgs e)
+            => Console.WriteLine("{0}%", ((int)Math.Round(100 * (double)e.ProcessedDuration.Ticks / e.TotalDuration.Ticks)).ToString());
     }
 }

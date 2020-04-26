@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using YoutubeExplode;
 using YoutubeExplode.Converter;
 using YoutubeExplode.Videos.Streams;
@@ -30,118 +31,107 @@ namespace BYTDownloader
                 }
             }
 
-            new DownloadQueue(tmp);
+            Console.Clear();
+
+            Console.WriteLine("Do you want to download it as a video or as a song?");
+
+            Console.WriteLine("1: Video");
+            Console.WriteLine("2: Song");
+
+            int input = int.Parse(Console.ReadLine());
+            new DownloadQueue(tmp, input == 1 ? true : (input == 2 ? false : new bool?()));
         }
     }
 
-    internal class DownloadQueue
+    internal class DownloadQueue : Backend
     {
-        private IProgress<double> pro2;
-
         private int ListMaxLength = 0;
 
         private int Current = 0;
 
         private double Previous = 0;
 
-        public DownloadQueue(List<string> list)
-        {
-            pro2 = new Progress<double>(HandleProgress2);
+        public DownloadQueue(List<string> list, bool? IsVideo) : base(IsVideo.Value, list) { }
 
-            DQueue(list);
-        }
-
-        private async void DQueue(List<string> list)
+        public override async Task PrepareDownload(bool IsVideo)
         {
+            pro = new Progress<double>(HandleProgress2);
             Console.Clear();
 
-            Console.WriteLine("Do you want the download it as a video or as a song?");
+            int? answer2 = null;
 
-            Console.WriteLine("1: Video");
-            Console.WriteLine("2: Song");
-
-            string answer = Console.ReadLine();
-
-            Console.Clear();
-
-            int answer2AsInt = 0;
-            if (int.Parse(answer) == 1)
+            if (IsVideo)
             {
                 Console.WriteLine("You have these options in which the quality of the playlist should be downloaded:\n" +
                                   "1: Best quality\n2: worst quality\n3: Set manually for each video the quality");
 
                 Console.Write("Your answer: ");
-                answer2AsInt = int.Parse(Console.ReadLine());
+                answer2 = int.Parse(Console.ReadLine());
             }
 
             ListMaxLength = list.Count;
 
-            for (int i = 0; i < list.Count; i++)
+            for (int i = 0; i < ListMaxLength; i++)
             {
                 var client = new YoutubeClient();
-
                 var video = await client.Videos.GetAsync(list[i]);
-                var streamManifest = await client.Videos.Streams.GetManifestAsync(video.Id);
 
-                bool Mp4Mode = false;
-
-                var allqualities = streamManifest.GetVideoOnly().Where(x => x.Container.Name == "webm").GetAllVideoQualities().ToArray();
-
-                if (allqualities.Length == 0)
+                Title = SharedMethods.CheckIfAvailableName(SharedMethods.Path, SharedMethods.ENGAlphabet(video.Title), format);
+                var manifest = await client.Videos.Streams.GetManifestAsync(video.Id);
+               
+                if (IsVideo)
                 {
-                    Mp4Mode = true;
-                    allqualities = streamManifest.GetVideoOnly().Where(x => x.Container.Name == "mp4").GetAllVideoQualities().ToArray();
+                    mediaStreamInfos = new IStreamInfo[]
+                    {
+                        manifest.GetAudioOnly().WithHighestBitrate(),
+                        manifest.GetVideoOnly().WithHighestVideoQuality()
+                    };
+
+                    switch (answer2.Value)
+                    {
+                        case 1:
+                            break;
+                        case 2:
+                            mediaStreamInfos[1] = manifest.GetVideoOnly().OrderByDescending(o => o.VideoQuality).ThenByDescending(o => o.Framerate).ThenByDescending(o => o.Bitrate).Last();
+                            break;
+                        case 3:
+                            {
+                                var allqualities = manifest.GetVideoOnly().ToArray();
+
+                                for (int j = 0; j < allqualities.Length; j++)
+                                    Console.WriteLine($"{j}: {allqualities[j].Resolution} - {allqualities[j].Framerate} - {allqualities[j].Bitrate} - {allqualities[j].Container}");
+
+                                Console.Write("Your answer: ");
+                                mediaStreamInfos[1] = manifest.GetVideoOnly().ToArray()[int.Parse(Console.ReadLine())];
+                                break;
+                            }
+
+                        default:
+                            throw new Exception();
+                    }
+
+                    Console.Title = "BYTDownloader";
+                    format = Format.Mp4;
+                }
+                else if (!IsVideo)
+                {
+                    format = Format.Mp3;
+                    mediaStreamInfos = new IStreamInfo[] { manifest.GetAudioOnly().WithHighestBitrate() };
                 }
 
-                if (int.Parse(answer) == 1)
-                {
-                    try
-                    {
-                        string title = SharedMethods.ENGAlphabet(video.Title);
+                streamInfosList.Add(mediaStreamInfos);
+            }
+        }
 
-                        IStreamInfo[] mediaStreamInfos = new IStreamInfo[]
-                        {
-                            streamManifest.GetAudioOnly().Where(x => x.Container.Name == (Mp4Mode ? "mp4" : "webm")).WithHighestBitrate(),
-                            streamManifest.GetVideoOnly().Where(x => x.Container.Name == (Mp4Mode ? "mp4" : "webm")).ToArray().OrderByDescending(c => c.Resolution).ThenByDescending(s => s.Framerate).First()
-                        };
+        public override async Task DownloadFile(YoutubeClient client, IReadOnlyList<IStreamInfo> readOnlyList, string path, string title, Format format)
+        {
+            Console.WriteLine("Download has started!");
+            YoutubeConverter converter = new YoutubeConverter(client);
 
-                        if (answer2AsInt == 2)
-                            mediaStreamInfos[1] = streamManifest.GetVideoOnly().Where(x => x.Container.Name == (Mp4Mode ? "mp4" : "webm")).ToArray().OrderByDescending(c => c.Resolution).ThenByDescending(s => s.Framerate).Last();
-                        else if (answer2AsInt == 3)
-                        {
-                            for (int j = 0; j < allqualities.Length; j++)
-                                Console.WriteLine($"{j}: {allqualities[j]}");
-
-                            Console.Write("Your answer: ");
-                            mediaStreamInfos[1] = streamManifest.GetVideoOnly().Where(x => x.Container.Name == (Mp4Mode ? "mp4" : "webm")).ToArray()[int.Parse(Console.ReadLine())];
-                        }
-
-                        string path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-                        string tit = SharedMethods.CheckIfAvailableName(path, title, Format.Mp4);
-
-                        await new YoutubeConverter(client).DownloadAndProcessMediaStreamsAsync(mediaStreamInfos, path + $"\\{tit}.mp4", "mp4", pro2);
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine(e.Message);
-                    }
-                }
-                else if (int.Parse(answer) == 2)
-                {
-                    try
-                    {
-                        Console.Title = "BYTDownloader";
-
-                        string path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-                        string tit = SharedMethods.CheckIfAvailableName(path, SharedMethods.ENGAlphabet(video.Title), Format.Mp3);
-
-                        await client.Videos.Streams.DownloadAsync(streamManifest.GetAudioOnly().Where(x => x.Container.Name == (Mp4Mode ? "mp4" : "webm")).WithHighestBitrate(), $"{path}\\{tit}.mp3", pro2);
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine(e.Message);
-                    }
-                }
+            for (int i = 0; i < ListMaxLength; i++)
+            {
+                title = SharedMethods.CheckIfAvailableName(path, SharedMethods.ENGAlphabet(title), format);
+                await converter.DownloadAndProcessMediaStreamsAsync(streamInfosList[i], $"{path}\\{title}.{format.ToString().ToLower()}", format.ToString().ToLower(), pro);
             }
         }
 
@@ -153,7 +143,6 @@ namespace BYTDownloader
             if (CalcIfDoubleUsed(progress))
             {
                 Current++;
-
                 Console.WriteLine($"{Current} / {ListMaxLength}");
 
                 if (Current == ListMaxLength)

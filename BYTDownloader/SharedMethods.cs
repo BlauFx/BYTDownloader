@@ -2,81 +2,48 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 
 namespace BYTDownloader
 {
     public static class SharedMethods
     {
-        private static bool Run = false;
-
         private static int Files = 0;
 
         private static string TmpTitle = string.Empty;
 
-        private static int PlaylistMaxLength = 0;
+        public static string Path { get; } = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
 
         private static int Current = 0;
 
-        private static double Previous = 0;
-
-        public static void HandleProgress(double progress)
+        public static void HandleProgress(double progress, bool Playlist, int PlaylistLength = 0)
         {
             string x = ((int)(progress * 100)).ToString();
             Console.Title = string.Format("BYTDownloader | {0}%", x);
 
-            if (x == "100")
+            if (Playlist && Current == PlaylistLength && x == "100")
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                System.Threading.Thread.Sleep(1000);
+
+                Thread.Sleep(1000);
                 Console.WriteLine("Done");
             }
-        }
-
-        public static void HandleProgress2(double progress)
-        {
-            string x = ((int)(progress * 100)).ToString();
-            Console.Title = string.Format("BYTDownloader | {0}%", x);
-
-            Run = CalcIfDoubleUsed(progress);
-
-            if (Run)
+            else if (!Playlist && x == "100")
             {
-                Run = false;
-                Current++;
+                Console.ForegroundColor = ConsoleColor.Red;
 
-                Console.WriteLine($"{Current} / {PlaylistMaxLength}");
-
-                if (Current == PlaylistMaxLength)
-                {
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    System.Threading.Thread.Sleep(1000);
-                    Console.WriteLine("Done");
-                }
-            }
-        }
-
-        private static bool CalcIfDoubleUsed(double progress)
-        {
-            if (progress == 1)
-            {
-                if (progress == Previous)
-                {
-                    return false;
-                }
-                Previous = progress;
-                return true;
+                Thread.Sleep(1000);
+                Console.WriteLine("Done");
             }
 
-            Previous = progress;
-
-            return false;
+            Current++;
         }
 
-public static string FileCutter(string str, int num) => str.Contains("(") ? $"{str.Substring(0, str.IndexOf("(", StringComparison.Ordinal))} ({num})" : $"{str} ({num})";
+        public static string FileCutter(string str, int num) => str.Contains("(") ? $"{str.Substring(0, str.IndexOf("(", StringComparison.Ordinal)-1)} ({num})" : $"{str} ({num})";
 
         public static string ENGAlphabet(string tit)
         {
-            char[] list = "ABCDEFGHIJKLMNOPQRSTUVWXYZ()$.-[]".ToCharArray();
+            char[] list = "ABCDEFGHIJKLMNOPQRSTUVWXYZ()$.-[]&'".ToCharArray();
             List<string> tmp = new List<string>();
 
             string Titel = string.Empty;
@@ -102,15 +69,15 @@ public static string FileCutter(string str, int num) => str.Contains("(") ? $"{s
 
         public static string CheckIfAvailableName(string path, string name, Format format = Format.Mp3)
         {
-            if (File.Exists(path + $"\\{name}.{format}"))
+            if (File.Exists(path + $"\\{name}.{format.ToString().ToLower()}"))
             {
-                CheckIfAvailableNameVoid(path, name, format);
+                CheckIfAvailableNameVoid(path, name, format.ToString().ToLower());
                 return TmpTitle;
             }
             return name;
         }
 
-        public static void CheckIfAvailableNameVoid(string path, string name, Format format = Format.Mp3)
+        public static void CheckIfAvailableNameVoid(string path, string name, string format)
         {
             if (File.Exists(path + $"\\{name}.{format}"))
             {

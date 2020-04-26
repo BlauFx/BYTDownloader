@@ -3,6 +3,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Net.Http;
 using System.Reflection;
+using System.Text;
 
 namespace BYTDownloader
 {
@@ -10,7 +11,9 @@ namespace BYTDownloader
     {
         static void Main()
         {
+            Console.OutputEncoding = Encoding.UTF8;
             Console.Title = "BYTDownloader";
+
             new License();
             CheckFFMPEG();
         }
@@ -66,21 +69,7 @@ namespace BYTDownloader
             else if (uint.Parse(x) == 2)
                 new DownloadSong();
             else if (uint.Parse(x) == 3)
-            {
-                Console.WriteLine("1: Specific part?\n2: Whole playlist");
-
-                var y = Console.ReadLine();
-                Console.Clear();
-                
-                if (int.Parse(y) == 1)
-                {
-                    new DownloadPlaylist(true);
-                }
-                else if (int.Parse(y) == 2)
-                {
-                    new DownloadPlaylist(false);
-                }
-            }
+                new DownloadPlaylist();
             else if (uint.Parse(x) == 4)
                 new Queue();
             else if (uint.Parse(x) == 5)
