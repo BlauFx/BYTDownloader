@@ -28,9 +28,9 @@ namespace BYTDownloader
                 Console.WriteLine("ffmpeg.exe not found");
                 Console.WriteLine("Start downloading ffmpeg.exe");
 
-                using var fs = new FileStream(CurrentDirectory + "//FFMPEG.zip", FileMode.CreateNew);
-                using HttpClient httpClient = new HttpClient();
-                httpClient.GetStreamAsync("https://ffmpeg.zeranoe.com/builds/win64/static/ffmpeg-20200417-889ad93-win64-static.zip").Result.CopyTo(fs);
+                using (var fs = new FileStream(CurrentDirectory + "//FFMPEG.zip", FileMode.CreateNew))
+                    using (HttpClient httpClient = new HttpClient())
+                        httpClient.GetStreamAsync("https://ffmpeg.zeranoe.com/builds/win64/static/ffmpeg-20200417-889ad93-win64-static.zip").Result.CopyTo(fs);
 
                 Directory.CreateDirectory(CurrentDirectory + "//temp");
                 ZipFile.ExtractToDirectory(CurrentDirectory + "//FFMPEG.zip", CurrentDirectory + "//temp");
