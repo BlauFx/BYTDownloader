@@ -11,8 +11,8 @@ namespace BYTDownloader
 
         public override async Task PrepareDownload(bool IsVideo)
         {
-            Console.WriteLine("URL: ");
             Console.Clear();
+            Console.WriteLine("URL: ");
 
             var client = new YoutubeClient();
             var video = await client.Videos.GetAsync(Console.ReadLine());

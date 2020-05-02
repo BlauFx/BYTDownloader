@@ -21,19 +21,12 @@ namespace BYTDownloader
             string x = ((int)(progress * 100)).ToString();
             Console.Title = string.Format("BYTDownloader | {0}%", x);
 
-            if (Playlist && Current == PlaylistLength && x == "100")
+            if (Playlist && Current == PlaylistLength && x == "100" || !Playlist && x == "100")
             {
                 Console.ForegroundColor = ConsoleColor.Red;
 
-                Thread.Sleep(1000);
                 Console.WriteLine("Done");
-            }
-            else if (!Playlist && x == "100")
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-
                 Thread.Sleep(1000);
-                Console.WriteLine("Done");
             }
 
             Current++;

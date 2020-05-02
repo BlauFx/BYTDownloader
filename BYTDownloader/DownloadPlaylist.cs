@@ -123,7 +123,7 @@ namespace BYTDownloader
                     Title = SharedMethods.CheckIfAvailableName(SharedMethods.Path + "\\Playlist", SharedMethods.ENGAlphabet(PlaylistVideos[i].Title), Format);
                     await converter.DownloadAndProcessMediaStreamsAsync(MediaStreamInfos, $"{path}\\Playlist\\{Title}.{format.ToString().ToLower()}", format.ToString().ToLower(), Pro2);
                 }
-                catch (Exception e)
+                catch
                 {
                     Console.Title = "BYTDownloader";
                     Console.ForegroundColor = ConsoleColor.Red;

@@ -7,7 +7,7 @@ using System.Text;
 
 namespace BYTDownloader
 {
-    class Program
+    internal class Program
     {
         static void Main()
         {
@@ -75,6 +75,7 @@ namespace BYTDownloader
             else if (uint.Parse(x) == 5)
                 new Converter();
 
+            Console.SetIn(new StreamReader(Console.OpenStandardInput()));
             Console.ReadLine();
         }
     }

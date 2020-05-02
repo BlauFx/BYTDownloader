@@ -38,6 +38,8 @@ namespace BYTDownloader
 
         public virtual async Task DownloadFile(YoutubeClient client, IReadOnlyList<IStreamInfo> readOnlyList, string path, string tit, Format format)
         {
+            Console.SetIn(TextReader.Null);
+
             Console.WriteLine("Download has started!");
             await new YoutubeConverter(client).DownloadAndProcessMediaStreamsAsync(readOnlyList, $"{path}\\{tit}.{format}", format.ToString(), pro);
         }
