@@ -9,13 +9,23 @@ namespace BYTDownloader
 {
     internal class Program
     {
+        public static string Version = "v5.0.0";
+
         static void Main()
         {
             Console.OutputEncoding = Encoding.UTF8;
             Console.Title = "BYTDownloader";
 
+            if (Directory.Exists("temp"))
+                Directory.Delete("temp", true);
+
             new License();
-            CheckFFMPEG();
+            Updater updater = new Updater();
+
+            if (!updater.IsUpdating)
+                CheckFFMPEG();
+            else
+                Console.ReadLine();
         }
 
         private static void CheckFFMPEG()
