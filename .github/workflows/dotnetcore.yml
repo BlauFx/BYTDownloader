@@ -18,7 +18,7 @@ jobs:
       with:
         dotnet-version: 3.1.201
     - name: Install dependencies
-      run: dotnet restore
+      run: dotnet restore BYTDownloader.sln
     - name: Build
       run: dotnet build BYTDownloader.sln --configuration Release --no-restore
     - name: Test
