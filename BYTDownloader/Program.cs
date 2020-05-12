@@ -9,7 +9,7 @@ namespace BYTDownloader
 {
     internal class Program
     {
-        public static string Version = "v5.0.1";
+        public static string Version = "v5.0.2";
 
         static void Main()
         {
