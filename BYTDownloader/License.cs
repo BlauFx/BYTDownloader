@@ -6,14 +6,15 @@ namespace BYTDownloader
 {
     public class License
     {
-        private readonly string[] license = new string[4];
-
+        private readonly string[] license = new string[5];
+        
         public License()
         {
             license[0] = "BYTDownloader";
             license[1] = "YoutubeExplode";
             license[2] = "YoutubeExplode.Converter";
-            license[3] = "FFmpeg.NET";
+            license[3] = "Newtonsoft.Json";
+            license[4] = "FFmpeg.NET";
 
             string path = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "Licenses");
 
