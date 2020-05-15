@@ -20,6 +20,6 @@ jobs:
     - name: Install dependencies
       run: dotnet restore BYTDownloader.sln
     - name: Build
-      run: dotnet build BYTDownloader.sln --configuration Release --no-restore
+      run: dotnet build BYTDownloader\\BYTDownloader.csproj --configuration Release --no-restore
     - name: Test
-      run: dotnet test BYTDownloader.sln --no-restore --verbosity normal
+      run: dotnet test BYTDownloader\\BYTDownloader.csproj --no-restore --verbosity normal
