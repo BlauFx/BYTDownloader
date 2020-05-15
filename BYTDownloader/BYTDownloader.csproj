@@ -8,6 +8,7 @@
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <AssemblyName>BYTDownloader</AssemblyName>
     <RootNamespace>BYTDownloader</RootNamespace>
+    <MvcRazorCompileOnPublish>false</MvcRazorCompileOnPublish>
     <PreserveCompilationContext>false</PreserveCompilationContext>
   </PropertyGroup>
 
