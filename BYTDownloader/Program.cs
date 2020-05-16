@@ -68,8 +68,7 @@ namespace BYTDownloader
                 "4: Add stuff to queue\n" +
                 "------------\n" +
                 "5: Converter\n" +
-                "------------\n" +
-                "");
+                "------------");
 
             var x = Console.ReadLine();
             Console.Clear();
