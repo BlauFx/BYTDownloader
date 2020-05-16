@@ -15,11 +15,13 @@ namespace BYTDownloader
 {
     class Updater
     {
-        private const string URL = "https://api.github.com/repos/BlauFx/BYTDownloader/releases";
+        private const string APIURL = "https://api.github.com/repos/BlauFx/BYTDownloader/releases";
+        private const string APIURLUpdater = "https://api.github.com/repos/BlauFx/Updater/releases";
 
         private readonly string ExePath = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
 
         private List<Github_Releases> Github_Releases = new List<Github_Releases>();
+        private List<Github_Releases> Github_ReleasesUpdater = new List<Github_Releases>();
 
         public bool IsUpdating = false;
 
@@ -36,16 +38,7 @@ namespace BYTDownloader
                     {
                         IsUpdating = true;
 
-                        if (!File.Exists("Updater.exe"))
-                        {
-                            Console.WriteLine("Couldn't find Updater.exe\nPlease download the update manually\nPress enter to open the downlaod page");
-
-                            if (Console.ReadKey().Key == ConsoleKey.Enter)
-                                Process.Start(new ProcessStartInfo("cmd", $"/c start {"https://github.com/BlauFx/BYTDownloader/releases"}"));
-
-                            return;
-                        }
-
+                        DownloadUpdateUpdater();
                         DownloadUpdate();
                         ApplyUpdate();
                     }
@@ -67,11 +60,13 @@ namespace BYTDownloader
 
                 httpClient.DefaultRequestHeaders.Add("user-agent", ".");
 
-                response = httpClient.GetAsync(URL).Result;
+                response = httpClient.GetAsync(APIURL).Result;
                 response.EnsureSuccessStatusCode();
+                Github_Releases = JsonConvert.DeserializeObject<List<Github_Releases>>(response?.Content.ReadAsStringAsync().Result);
 
-                string responseStr = response.Content.ReadAsStringAsync().Result;
-                Github_Releases = JsonConvert.DeserializeObject<List<Github_Releases>>(responseStr);
+                response = httpClient.GetAsync(APIURLUpdater).Result;
+                response.EnsureSuccessStatusCode();
+                Github_ReleasesUpdater = JsonConvert.DeserializeObject<List<Github_Releases>>(response?.Content.ReadAsStringAsync().Result);
             }
             catch { /*It can fail due to no internet connection or being rate-limited*/ }
 
@@ -80,7 +75,7 @@ namespace BYTDownloader
 
         private bool CheckNewVersionAvailable()
         {
-            var assets = Github_Releases?.First(x => x.assets == x.assets);
+            var assets = Github_Releases?.FirstOrDefault(x => x.assets == x.assets);
             return !GetCurrentVersion().Equals(assets?.tag_name ?? GetCurrentVersion());
         }
 
@@ -115,6 +110,34 @@ namespace BYTDownloader
             {
                 using StreamWriter strmWriter = new StreamWriter(@$"{ExePath}/temp/win-x64.txt");
                 strmWriter.WriteLine("Done");
+            }
+        }
+
+        public void DownloadUpdateUpdater()
+        {
+            var x = Github_ReleasesUpdater?.FirstOrDefault(x => x.assets == x.assets);
+            Assets Updater = x?.assets?.FirstOrDefault(y => y.name.Equals("Updater.exe"));
+
+            if (File.Exists("Updater.exe"))
+                File.Delete("Updater.exe");
+
+            try
+            {
+                using HttpClient httpClient = new HttpClient();
+                httpClient.DefaultRequestHeaders.Add("user-agent", ".");
+
+                using var fs = new FileStream(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "//Updater.exe", FileMode.CreateNew);
+                httpClient.GetStreamAsync(Updater?.browser_download_url).Result.CopyTo(fs);
+            }
+            catch (Exception e)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"Failed to download updater ({x?.tag_name})\nError msg: {e.Message}");
+
+                Console.ReadLine();
+
+                Console.ResetColor();
+                Environment.Exit(0);
             }
         }
 
