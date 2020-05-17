@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using CliWrap.EventStream;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -13,17 +14,17 @@ using static System.IO.Directory;
 
 namespace BYTDownloader
 {
-    class Updater
+    public class Updater
     {
-        private const string APIURL = "https://api.github.com/repos/BlauFx/BYTDownloader/releases";
-        private const string APIURLUpdater = "https://api.github.com/repos/BlauFx/Updater/releases";
+        private const string ThisRepo = "BYTDownloader";
+        private const string UpdaterRepo = "Updater";
 
         private readonly string ExePath = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
 
         private List<Github_Releases> Github_Releases = new List<Github_Releases>();
         private List<Github_Releases> Github_ReleasesUpdater = new List<Github_Releases>();
 
-        public bool IsUpdating = false;
+        public bool IsUpdating { get; set; } = false;
 
         public Updater()
         {
@@ -38,8 +39,9 @@ namespace BYTDownloader
                     {
                         IsUpdating = true;
 
-                        DownloadUpdateUpdater();
-                        DownloadUpdate();
+                        DownloadUpdate("Updater.exe", true);
+                        DownloadUpdate("win-x64.zip", false);
+
                         ApplyUpdate();
                     }
                 }
@@ -57,16 +59,18 @@ namespace BYTDownloader
             {
                 using HttpClient httpClient = new HttpClient();
                 HttpResponseMessage response;
+                HttpResponseMessage response2;
 
                 httpClient.DefaultRequestHeaders.Add("user-agent", ".");
 
-                response = httpClient.GetAsync(APIURL).Result;
-                response.EnsureSuccessStatusCode();
-                Github_Releases = JsonConvert.DeserializeObject<List<Github_Releases>>(response?.Content.ReadAsStringAsync().Result);
+                response = httpClient.GetAsync($"https://api.github.com/repos/BlauFx/{ThisRepo}/releases").Result;
+                response2 = httpClient.GetAsync($"https://api.github.com/repos/BlauFx/{UpdaterRepo}/releases").Result;
 
-                response = httpClient.GetAsync(APIURLUpdater).Result;
                 response.EnsureSuccessStatusCode();
-                Github_ReleasesUpdater = JsonConvert.DeserializeObject<List<Github_Releases>>(response?.Content.ReadAsStringAsync().Result);
+                response2.EnsureSuccessStatusCode();
+
+                Github_Releases = JsonConvert.DeserializeObject<List<Github_Releases>>(response?.Content.ReadAsStringAsync().Result);
+                Github_ReleasesUpdater = JsonConvert.DeserializeObject<List<Github_Releases>>(response2?.Content.ReadAsStringAsync().Result);
             }
             catch { /*It can fail due to no internet connection or being rate-limited*/ }
 
@@ -81,10 +85,16 @@ namespace BYTDownloader
 
         private string GetCurrentVersion() => Program.Version;
 
-        public void DownloadUpdate()
+        public void DownloadUpdate(string str, bool Update)
         {
-            var x = Github_Releases.First(x => x.assets == x.assets);
-            Assets win_x64 = x.assets.FirstOrDefault(y => y.name.Equals("win-x64.zip"));
+            var x = (Update == true ? Github_ReleasesUpdater : Github_Releases)?.FirstOrDefault(x => x.assets == x.assets);
+            Assets assets = x?.assets?.FirstOrDefault(y => y.name.Equals(str));
+
+            if (Update)
+            {
+                if (File.Exists("Updater.exe"))
+                    File.Delete("Updater.exe");
+            }
 
             if (!Exists(@$"{ExePath}/temp"))
                 CreateDirectory(@$"{ExePath}/temp");
@@ -94,15 +104,17 @@ namespace BYTDownloader
                 using HttpClient httpClient = new HttpClient();
                 httpClient.DefaultRequestHeaders.Add("user-agent", ".");
 
-                using var fs = new FileStream(@$"{ExePath}/temp/win-x64.zip", FileMode.CreateNew);
-                httpClient.GetStreamAsync(win_x64.browser_download_url).Result.CopyTo(fs);
+                using var fs = new FileStream($"{ExePath}//{(str.Contains("Updater", StringComparison.OrdinalIgnoreCase) == true ? "Updater.exe" : "temp//win-x64.zip")}", FileMode.CreateNew);
+                httpClient.GetStreamAsync(assets?.browser_download_url).Result.CopyTo(fs);
             }
-            catch (Exception e) 
+            catch (Exception e)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"Failed to download win-x64 ({x.tag_name})\nError msg: {e.Message}");
+                Console.WriteLine($"Failed to download {(Update == true ? "update.exe" : "win-x64-zip")} ({x?.tag_name})\nError msg: {e.Message}");
 
                 Console.ReadLine();
+
+                Console.ResetColor();
                 Environment.Exit(0);
             }
 
@@ -110,34 +122,6 @@ namespace BYTDownloader
             {
                 using StreamWriter strmWriter = new StreamWriter(@$"{ExePath}/temp/win-x64.txt");
                 strmWriter.WriteLine("Done");
-            }
-        }
-
-        public void DownloadUpdateUpdater()
-        {
-            var x = Github_ReleasesUpdater?.FirstOrDefault(x => x.assets == x.assets);
-            Assets Updater = x?.assets?.FirstOrDefault(y => y.name.Equals("Updater.exe"));
-
-            if (File.Exists("Updater.exe"))
-                File.Delete("Updater.exe");
-
-            try
-            {
-                using HttpClient httpClient = new HttpClient();
-                httpClient.DefaultRequestHeaders.Add("user-agent", ".");
-
-                using var fs = new FileStream(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + "//Updater.exe", FileMode.CreateNew);
-                httpClient.GetStreamAsync(Updater?.browser_download_url).Result.CopyTo(fs);
-            }
-            catch (Exception e)
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"Failed to download updater ({x?.tag_name})\nError msg: {e.Message}");
-
-                Console.ReadLine();
-
-                Console.ResetColor();
-                Environment.Exit(0);
             }
         }
 
