@@ -19,6 +19,9 @@ namespace BYTDownloader
             if (Directory.Exists("temp"))
                 Directory.Delete("temp", true);
 
+            if (File.Exists("FFMPEG.zip"))
+                File.Delete("FFMPEG.zip");
+
             new License();
             Updater updater = new Updater();
 
