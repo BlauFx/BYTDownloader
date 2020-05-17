@@ -73,20 +73,16 @@ namespace BYTDownloader
             }
             catch { /*It can fail due to no internet connection or being rate-limited*/ }
 
-            return CheckNewVersionAvailable();
+            return CheckIfNewVersionIsAvailable();
         }
 
-        private bool CheckNewVersionAvailable()
-        {
-            var assets = Github_Releases?.FirstOrDefault(x => x.assets == x.assets);
-            return !GetCurrentVersion().Equals(assets?.tag_name ?? GetCurrentVersion());
-        }
+        private bool CheckIfNewVersionIsAvailable() => !GetCurrentVersion().Equals(Github_Releases?.FirstOrDefault()?.tag_name ?? GetCurrentVersion());
 
         private string GetCurrentVersion() => Program.Version;
 
         public void DownloadUpdate(string str, bool Update)
         {
-            var x = (Update == true ? Github_ReleasesUpdater : Github_Releases)?.FirstOrDefault(x => x.assets == x.assets);
+            var x = (Update == true ? Github_ReleasesUpdater : Github_Releases)?.FirstOrDefault();
             Assets assets = x?.assets?.FirstOrDefault(y => y.name.Equals(str));
 
             if (Update)
