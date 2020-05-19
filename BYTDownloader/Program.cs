@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.IO.Compression;
 using System.Net.Http;
@@ -9,8 +9,6 @@ namespace BYTDownloader
 {
     internal class Program
     {
-        public static string Version = "v5.2.0";
-
         static void Main()
         {
             Console.OutputEncoding = Encoding.UTF8;
@@ -65,12 +63,15 @@ namespace BYTDownloader
 
         private static void INI()
         {
-            Console.WriteLine("1: Video\n" +
+            Console.WriteLine(
+                "1: Video\n" +
                 "2: Song\n" +
                 "3: Playlist\n" +
                 "4: Add stuff to queue\n" +
                 "------------\n" +
                 "5: Converter\n" +
+                "------------\n" +
+                "6: About\n" +
                 "------------");
 
             var x = Console.ReadLine();
@@ -86,9 +87,27 @@ namespace BYTDownloader
                 new Queue();
             else if (uint.Parse(x) == 5)
                 new Converter();
+            else if (uint.Parse(x) == 6)
+                About();
 
             Console.SetIn(new StreamReader(Console.OpenStandardInput()));
             Console.ReadLine();
+        }
+
+        private static void About()
+        {
+            Console.Clear();
+
+            Console.WriteLine($"BYTDownloader current version: v {Assembly.GetExecutingAssembly().GetName().Version}\n+" +
+                $"Using Newtonsoft.Json: {Assembly.GetAssembly(typeof(Newtonsoft.Json.JsonConvert)).GetName().Version}\n" +
+                $"Using YoutubeExplode: {Assembly.GetAssembly(typeof(YoutubeExplode.YoutubeClient)).GetName().Version}\n" +
+                $"Using YoutubeExplode.Converter: {Assembly.GetAssembly(typeof(YoutubeExplode.Converter.YoutubeConverter)).GetName().Version}\n" +
+                $"Using FFmpeg.NET: {Assembly.GetAssembly(typeof(FFmpeg.NET.Engine)).GetName().Version}\n" +
+                $"\nPress enter to return to mainmenu");
+
+            Console.ReadLine();
+            Console.Clear();
+            INI();
         }
     }
 

@@ -15,7 +15,7 @@ namespace BYTDownloader
 {
     public class Updater
     {
-        private const string ThisRepo = "BYTDownloader";
+        public const string ThisRepo = "BYTDownloader";
         private const string UpdaterRepo = "Updater";
 
         private readonly string ExePath = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
@@ -78,7 +78,7 @@ namespace BYTDownloader
 
         private bool CheckIfNewVersionIsAvailable() => !GetCurrentVersion().Equals(Github_Releases?.FirstOrDefault()?.tag_name ?? GetCurrentVersion());
 
-        private string GetCurrentVersion() => Program.Version;
+        private string GetCurrentVersion() => Assembly.GetExecutingAssembly().GetName().Version.ToString();
 
         public void DownloadUpdate(string str, bool Update)
         {
