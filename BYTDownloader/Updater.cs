@@ -76,7 +76,7 @@ namespace BYTDownloader
             return CheckIfNewVersionIsAvailable();
         }
 
-        private bool CheckIfNewVersionIsAvailable() => !GetCurrentVersion().Equals(Github_Releases?.FirstOrDefault()?.tag_name ?? GetCurrentVersion());
+        private bool CheckIfNewVersionIsAvailable() => !GetCurrentVersion().Equals(Github_Releases?.FirstOrDefault()?.tag_name.Trim('v', 'V') ?? GetCurrentVersion());
 
         private string GetCurrentVersion() => Assembly.GetExecutingAssembly().GetName().Version.ToString();
 
