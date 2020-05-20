@@ -28,8 +28,11 @@ namespace BYTDownloader
             {
                 if (!File.Exists($"{path}\\{license[i]}.txt"))
                 {
-                    using var fs = new FileStream($"{path}\\{license[i]}.txt", FileMode.CreateNew);
-                    httpClient.GetStreamAsync($"https://raw.githubusercontent.com/BlauFx/BYTDownloader/master/Licenses/{license[i]}.txt").Result.CopyTo(fs);
+                    try 
+                    {
+                        using var fs = new FileStream($"{path}\\{license[i]}.txt", FileMode.CreateNew);
+                        httpClient.GetStreamAsync($"https://raw.githubusercontent.com/BlauFx/BYTDownloader/master/Licenses/{license[i]}.txt").Result.CopyTo(fs);
+                    } catch { }
                 }
             }
         }
