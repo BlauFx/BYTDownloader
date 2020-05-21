@@ -38,6 +38,16 @@ namespace BYTDownloader
                     {
                         IsUpdating = true;
 
+                        var path = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+                        string projectName = Path.GetFileName(path);
+
+                        if (!projectName.Equals("BYTDownloader", StringComparison.OrdinalIgnoreCase))
+                        {
+                            Console.WriteLine("The executable needs to be located in a folder called \"BYTDownloader\"\n\nThe reason for this is the updater deletes/replaces every file in the current location.\nThis is very dangerous if the executable is located in a very important location\nFor example the desktop or some folder with important files!");
+                            Console.ReadLine();
+                            Environment.Exit(0);
+                        }
+
                         DownloadUpdate("Updater.exe", true);
                         DownloadUpdate("win-x64.zip", false);
 
@@ -105,7 +115,7 @@ namespace BYTDownloader
             catch (Exception e)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"Failed to download {(Update == true ? "update.exe" : "win-x64-zip")} ({x?.tag_name})\nError msg: {e.Message}");
+                Console.WriteLine($"Failed to download {(Update == true ? "updater.exe" : "win-x64-zip")} ({x?.tag_name})\nError msg: {e.Message}");
 
                 Console.ReadLine();
 
