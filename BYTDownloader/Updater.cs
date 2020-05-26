@@ -72,8 +72,8 @@ namespace BYTDownloader
 
                 httpClient.DefaultRequestHeaders.Add("user-agent", ".");
 
-                response = httpClient.GetAsync($"https://api.github.com/repos/BlauFx/{ThisRepo}/releases").Result;
-                response2 = httpClient.GetAsync($"https://api.github.com/repos/BlauFx/{UpdaterRepo}/releases").Result;
+                response = httpClient.GetAsync($"https://api.github.com/repos/BlauFx/{ThisRepo}/releases?per_page=5").Result;
+                response2 = httpClient.GetAsync($"https://api.github.com/repos/BlauFx/{UpdaterRepo}/releases?per_page=5").Result;
 
                 response.EnsureSuccessStatusCode();
                 response2.EnsureSuccessStatusCode();
@@ -88,7 +88,7 @@ namespace BYTDownloader
 
         private bool CheckIfNewVersionIsAvailable() => !GetCurrentVersion().Equals(Github_Releases?.FirstOrDefault()?.tag_name.Trim('v', 'V') ?? GetCurrentVersion());
 
-        private string GetCurrentVersion() => Assembly.GetExecutingAssembly().GetName().Version.ToString();
+        private string GetCurrentVersion() => FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location).ProductVersion.ToString();
 
         public void DownloadUpdate(string str, bool Update)
         {
