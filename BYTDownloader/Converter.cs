@@ -15,14 +15,14 @@ namespace BYTDownloader
             Console.Title = "Converter";
             Console.Write("Input file: ");
 
-            string x = Console.ReadLine();
-            string x2 = Fixinput(x);
+            string x = Fixinput(Console.ReadLine());
+            var inputFile = new MediaFile(x);
 
-            var inputFile = new MediaFile(x2);
             Console.Write("Fomat: ");
 
             var format = Console.ReadLine();
-            var outputFile = new MediaFile($"{GetFileDir(x2)}\\{GetOutputName(x2, format)}.{format}");
+
+            var outputFile = new MediaFile($"{Path.GetDirectoryName(x)}\\{GetOutputName(x, format)}.{format}");
 
             var conversionOptions = new ConversionOptions
             {
@@ -60,37 +60,22 @@ namespace BYTDownloader
             return input;
         }
 
-        private string GetFileDir(string inputFile)
-        {
-            int num = inputFile.LastIndexOf("\\", StringComparison.Ordinal);
-            string str = inputFile.Substring(0, num);
-
-            return str;
-        }
-
         private string GetOutputName(string inputFile, string format)
         {
-            int num = inputFile.LastIndexOf("\\", StringComparison.Ordinal)+1;
+            int num = inputFile.LastIndexOf("\\", StringComparison.Ordinal) + 1;
             int num2 = inputFile.LastIndexOf(".", StringComparison.Ordinal);
-            string str = inputFile.Substring(num, num2 - num);
+            string str = inputFile[num..(num2 - num)];
             
             string checkEng = SharedMethods.ENGAlphabet(str);
 
             Format fmr = ParseFormat(format);
-            
-            string finalstr = SharedMethods.CheckIfAvailableName(GetFileDir(inputFile), checkEng, fmr);
+
+            string finalstr = SharedMethods.CheckIfAvailableName(Path.GetDirectoryName(inputFile), checkEng, fmr);
             return finalstr;
         }
-        
+
         private Format ParseFormat(string format)
-        {
-            if (!(string.IsNullOrEmpty(format)))
-            {
-                Format dir = (Format)Enum.Parse(typeof(Format), format,true);
-                return dir;
-            }
-            throw new NullReferenceException("string can not be null");
-        }
+            => string.IsNullOrEmpty(format) != true ? (Format)Enum.Parse(typeof(Format), format, true) : throw new NullReferenceException("string can not be null");
 
         private void Engine_ConvertProgressEvent(object sender, ConversionProgressEventArgs e)
             => Console.WriteLine("{0}%", ((int)Math.Round(100 * (double)e.ProcessedDuration.Ticks / e.TotalDuration.Ticks)).ToString());
