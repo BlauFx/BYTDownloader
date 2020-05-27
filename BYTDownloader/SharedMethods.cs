@@ -8,11 +8,9 @@ namespace BYTDownloader
 {
     public static class SharedMethods
     {
-        private static int Files = 0;
-
-        private static string TmpTitle = string.Empty;
-
         public static string Path { get; } = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+
+        private static int Files = 0;
 
         private static int Current = 0;
 
@@ -31,8 +29,6 @@ namespace BYTDownloader
 
             Current++;
         }
-
-        public static string FileCutter(string str, int num) => str.Contains("(") ? $"{str.Substring(0, str.IndexOf("(", StringComparison.Ordinal)-1)} ({num})" : $"{str} ({num})";
 
         public static string ENGAlphabet(string tit)
         {
@@ -64,24 +60,14 @@ namespace BYTDownloader
         {
             if (File.Exists(path + $"\\{name}.{format.ToString().ToLower()}"))
             {
-                CheckIfAvailableNameVoid(path, name, format.ToString().ToLower());
-                return TmpTitle;
-            }
-            return name;
-        }
-
-        public static void CheckIfAvailableNameVoid(string path, string name, string format)
-        {
-            if (File.Exists(path + $"\\{name}.{format}"))
-            {
                 Files++;
-                CheckIfAvailableNameVoid(path, FileCutter(name, Files), format);
+                return CheckIfAvailableName(path, FileCutter(name, Files), format);
             }
             else
-            {
-                Files = 0;
-                TmpTitle = name;
-            }
+                return name;
         }
+
+        public static string FileCutter(string str, int num) 
+            => str.Contains("(") ? $"{str.Substring(0, str.IndexOf("(", StringComparison.Ordinal) - 1)} ({num})" : $"{str} ({num})";
     }
 }

@@ -4,6 +4,7 @@ using FFmpeg.NET.Events;
 using System;
 using System.IO;
 using System.Reflection;
+using System.Text;
 using System.Threading;
 
 namespace BYTDownloader
@@ -12,6 +13,9 @@ namespace BYTDownloader
     {
         public Converter()
         {
+            Console.InputEncoding = Encoding.Unicode;
+            Console.OutputEncoding = Encoding.Unicode;
+
             Console.Title = "Converter";
             Console.Write("Input file: ");
 
@@ -21,7 +25,6 @@ namespace BYTDownloader
             Console.Write("Fomat: ");
 
             var format = Console.ReadLine();
-
             var outputFile = new MediaFile($"{Path.GetDirectoryName(x)}\\{GetOutputName(x, format)}.{format}");
 
             var conversionOptions = new ConversionOptions
@@ -51,7 +54,7 @@ namespace BYTDownloader
 
         private string Fixinput(string input)
         {
-            if(input.StartsWith("\""))
+            if (input.StartsWith("\""))
                 input = input[1..];
 
             if (input.EndsWith("\""))
@@ -64,14 +67,9 @@ namespace BYTDownloader
         {
             int num = inputFile.LastIndexOf("\\", StringComparison.Ordinal) + 1;
             int num2 = inputFile.LastIndexOf(".", StringComparison.Ordinal);
-            string str = inputFile[num..(num2 - num)];
-            
-            string checkEng = SharedMethods.ENGAlphabet(str);
+            string name = inputFile[num..num2];
 
-            Format fmr = ParseFormat(format);
-
-            string finalstr = SharedMethods.CheckIfAvailableName(Path.GetDirectoryName(inputFile), checkEng, fmr);
-            return finalstr;
+            return SharedMethods.CheckIfAvailableName(Path.GetDirectoryName(inputFile), name, ParseFormat(format));
         }
 
         private Format ParseFormat(string format)
