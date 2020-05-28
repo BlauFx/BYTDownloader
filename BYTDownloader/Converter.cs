@@ -13,9 +13,6 @@ namespace BYTDownloader
     {
         public Converter()
         {
-            Console.InputEncoding = Encoding.Unicode;
-            Console.OutputEncoding = Encoding.Unicode;
-
             Console.Title = "Converter";
             Console.Write("Input file: ");
 

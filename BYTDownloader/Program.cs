@@ -11,7 +11,8 @@ namespace BYTDownloader
     {
         static void Main()
         {
-            Console.OutputEncoding = Encoding.UTF8;
+            Console.InputEncoding = Encoding.Unicode;
+            Console.OutputEncoding = Encoding.Unicode;
             Console.Title = "BYTDownloader";
 
             if (Directory.Exists("temp"))
