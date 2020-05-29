@@ -18,12 +18,12 @@ namespace BYTDownloader
 
         public static int ListMaxLength { get; set; } = 0;
 
-        public static void HandleProgress(double progress, bool Queue = false, bool Playlist = false, int PlaylistLength = 0)
+        public static void HandleProgress(double progress, bool IfQueueOrPlaylist = false)
         {
             string x = ((int)(progress * 100)).ToString();
             Console.Title = string.Format("BYTDownloader | {0}%", x);
 
-            if (Queue)
+            if (IfQueueOrPlaylist)
             {
                 static bool CalcIfDoubleUsed(double progress)
                 {
@@ -57,14 +57,6 @@ namespace BYTDownloader
                 }
 
                 return;
-            }
-
-            if (Playlist && Current == PlaylistLength && x == "100" || !Playlist && x == "100")
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-
-                Console.WriteLine("Done");
-                Thread.Sleep(1000);
             }
 
             Current++;

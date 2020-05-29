@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,28 +14,55 @@ namespace BYTDownloader
     {
         public override async Task PrepareDownload(bool WholePlaylist)
         {
+            Console.Clear();
+
+            Console.WriteLine("URL: ");
+            var url = Console.ReadLine();
+
+            Console.Clear();
+
+            if (!WholePlaylist)
+            {
+                Console.WriteLine("Which part in the playlist?");
+                Part = int.Parse(Console.ReadLine()) - 1;
+            }
+
+            Console.Clear();
+            Console.WriteLine("Do you want the download it as a video or as a song?");
+
+            Console.WriteLine("1: Video");
+            Console.WriteLine("2: Song");
+
+            Answer = int.Parse(Console.ReadLine());
+            Console.Clear();
+
+            Console.Title = "BYTDownloader | Loading...";
+            PlaylistVideos = client.Playlists.GetVideosAsync(client.Playlists.GetAsync(url).GetAwaiter().GetResult().Id).BufferAsync().GetAwaiter().GetResult();
+
+            if (!Directory.Exists(SharedMethods.Path + "\\Playlist"))
+                Directory.CreateDirectory(SharedMethods.Path + "\\Playlist");
+
+
             if (!WholePlaylist)
             {
                 var manifest = await client.Videos.Streams.GetManifestAsync(client.Videos.GetAsync(PlaylistVideos.ElementAt(Part).Url).GetAwaiter().GetResult().Id);
 
                 if (Answer == 1) //Video
                 {
-                    Console.WriteLine("In which resolution do you want to download the video?");
-                    Console.WriteLine("Type the Number that is displayed before the resolution / fps");
+                    Console.WriteLine("In which resolution do you want to download the video?\n" + "Type the Number that is displayed before the resolution / fps");
 
-                    VideoQuality[] allqualities = manifest.GetVideoOnly().Where(x => x.Container.Name == "webm").GetAllVideoQualities().ToArray()
-                        ?? manifest.GetVideoOnly().Where(x => x.Container.Name == "mp4").GetAllVideoQualities().ToArray();
+                    var allqualities = manifest.GetVideoOnly().ToArray();
 
                     for (int i = 0; i < allqualities.Length; i++)
-                        Console.WriteLine($"{i}: {allqualities[i]}");
+                        Console.WriteLine($"{i}: {allqualities[i].Resolution} - {allqualities[i].Framerate} - {allqualities[i].Bitrate} - {allqualities[i].Container}");
 
                     Console.Title = "BYTDownloader";
-                    Console.Write("Your answer: ");
+                    Console.WriteLine("Your answer: ");
 
                     MediaStreamInfos = new IStreamInfo[]
                     {
                         manifest.GetAudioOnly().WithHighestBitrate(),
-                        manifest.GetVideoOnly().Where(x => x.Container.Name == "webm" ? x.Container.Name == "webm" : x.Container.Name == "mp4").ToArray()[int.Parse(Console.ReadLine())]
+                        manifest.GetVideoOnly().ToArray()[int.Parse(Console.ReadLine())]
                     };
                 }
                 else if (Answer == 2) //Sound
@@ -55,7 +83,7 @@ namespace BYTDownloader
                 return;
             }
 
-            int? answer2 = null;
+            int? Answer2 = null;
 
             if (Answer == 1)
             {
@@ -64,11 +92,10 @@ namespace BYTDownloader
 
                 Console.Write("Your answer: ");
 
-                answer2 = int.Parse(Console.ReadLine());
+                Answer2 = int.Parse(Console.ReadLine());
             }
 
             int playlistLength = PlaylistVideos.Count();
-            Pro2 = new Progress<double>((p) => SharedMethods.HandleProgress(p, false, true, playlistLength));
 
             YoutubeConverter converter = new YoutubeConverter(client);
             Console.WriteLine("Download has started!");
@@ -88,7 +115,7 @@ namespace BYTDownloader
                             manifest.GetVideoOnly().WithHighestVideoQuality()
                         };
 
-                        switch (answer2.Value)
+                        switch (Answer2.Value)
                         {
                             case 1:
                                 break;
@@ -121,7 +148,7 @@ namespace BYTDownloader
                     }
 
                     Title = SharedMethods.CheckIfAvailableName(SharedMethods.Path + "\\Playlist", SharedMethods.ENGAlphabet(PlaylistVideos[i].Title), Format);
-                    await converter.DownloadAndProcessMediaStreamsAsync(MediaStreamInfos, $"{path}\\Playlist\\{Title}.{format.ToString().ToLower()}", format.ToString().ToLower(), Pro2);
+                    await converter.DownloadAndProcessMediaStreamsAsync(MediaStreamInfos, $"{path}\\Playlist\\{Title}.{format.ToString().ToLower()}", format.ToString().ToLower(), Pro);
                 }
                 catch
                 {

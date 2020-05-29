@@ -68,8 +68,6 @@ namespace BYTDownloader
     {
         public IProgress<double> Pro { get; set; }
 
-        public IProgress<double> Pro2 { get; set; }
-
         public YoutubeClient client = new YoutubeClient();
 
         public string Title { get; set; }
@@ -92,52 +90,15 @@ namespace BYTDownloader
 
             Console.WriteLine("1: Specific part?\n2: Whole playlist");
 
-            int input = int.Parse(Console.ReadLine());
-            bool WholePlaylist = input != 1;
+            bool WholePlaylist = int.Parse(Console.ReadLine()) != 1;
 
-            PrepareDownloadBackend(WholePlaylist);
             PrepareDownload(WholePlaylist).GetAwaiter().GetResult();
-
-            Console.WriteLine("Download has started!");
             DownloadFile(WholePlaylist, client, MediaStreamInfos, SharedMethods.Path, Format).GetAwaiter().GetResult();
         }
 
         public abstract Task PrepareDownload(bool WholePlaylist);
 
-        private void PrepareDownloadBackend(bool WholePlaylist)
-        {
-            Console.Clear();
-
-            Console.WriteLine("URL: ");
-            var url = Console.ReadLine();
-
-            Console.Clear();
-
-            if (!WholePlaylist)
-            {
-                Console.WriteLine("Which part in the playlist?");
-                Part = int.Parse(Console.ReadLine()) - 1;
-            }
-
-            Console.Clear();
-            Console.WriteLine("Do you want the download it as a video or as a song?");
-
-            Console.WriteLine("1: Video");
-            Console.WriteLine("2: Song");
-
-            Answer = int.Parse(Console.ReadLine());
-            Console.Clear();
-
-            Console.Title = "BYTDownloader | Loading...";
-            PlaylistVideos = client.Playlists.GetVideosAsync(client.Playlists.GetAsync(url).GetAwaiter().GetResult().Id).BufferAsync().GetAwaiter().GetResult();
-
-            if (!Directory.Exists(SharedMethods.Path + "\\Playlist"))
-                Directory.CreateDirectory(SharedMethods.Path + "\\Playlist");
-        }
-
-        public virtual async Task DownloadFile(bool WholePlaylist, YoutubeClient client, IReadOnlyList<IStreamInfo> readOnlyList, string path, Format format)
-        {
-            await new YoutubeConverter(client).DownloadAndProcessMediaStreamsAsync(readOnlyList, $"{path}\\Playlist\\{Title}.{format.ToString().ToLower()}", format.ToString().ToLower(), Pro);
-        }
+        public virtual async Task DownloadFile(bool WholePlaylist, YoutubeClient client, IReadOnlyList<IStreamInfo> readOnlyList, string path, Format format) 
+            => await new YoutubeConverter(client).DownloadAndProcessMediaStreamsAsync(readOnlyList, $"{path}\\Playlist\\{Title}.{format.ToString().ToLower()}", format.ToString().ToLower(), Pro);
     }
 }
