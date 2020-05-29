@@ -39,7 +39,7 @@ namespace BYTDownloader
                 }
                 else if (Answer == 2) //Sound
                 {
-                    Format = Format.Mp3;
+                    Format = Format.mp3;
                     MediaStreamInfos = new IStreamInfo[] { manifest.GetAudioOnly().WithHighestBitrate() };
                 }
 
@@ -68,7 +68,7 @@ namespace BYTDownloader
             }
 
             int playlistLength = PlaylistVideos.Count();
-            Pro2 = new Progress<double>((p) => SharedMethods.HandleProgress(p, true, playlistLength));
+            Pro2 = new Progress<double>((p) => SharedMethods.HandleProgress(p, false, true, playlistLength));
 
             YoutubeConverter converter = new YoutubeConverter(client);
             Console.WriteLine("Download has started!");
@@ -112,11 +112,11 @@ namespace BYTDownloader
                         }
 
                         Console.Title = "BYTDownloader";
-                        Format = Format.Mp4;
+                        Format = Format.mp4;
                     }
                     else if (Answer == 2) //Sound
                     {
-                        Format = Format.Mp3;
+                        Format = Format.mp3;
                         MediaStreamInfos = new IStreamInfo[] { manifest.GetAudioOnly().WithHighestBitrate() };
                     }
 

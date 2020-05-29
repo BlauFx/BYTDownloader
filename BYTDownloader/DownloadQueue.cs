@@ -1,10 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using YoutubeExplode;
-using YoutubeExplode.Converter;
 using YoutubeExplode.Videos.Streams;
 
 namespace BYTDownloader
@@ -39,26 +35,18 @@ namespace BYTDownloader
             Console.WriteLine("2: Song");
 
             int input = int.Parse(Console.ReadLine());
-            new DownloadQueue(tmp, input == 1 ? true : (input == 2 ? false : new bool?()));
+            new DownloadQueue(tmp, (bool)(input == 1 ? true : (input == 2 ? false : new bool?())));
         }
     }
 
     internal class DownloadQueue : Backend
     {
-        private int ListMaxLength = 0;
+        public DownloadQueue(List<string> list, bool IsVideo) : base(list, IsVideo) { }
 
-        private int Current = 0;
-
-        private double Previous = 0;
-
-        public DownloadQueue(List<string> list, bool? IsVideo) : base(IsVideo.Value, list) { }
-
-        public override async Task PrepareDownload(bool IsVideo)
+        public override void PrepareDownload(bool IsVideo)
         {
-            pro = new Progress<double>(HandleProgress2);
             Console.Clear();
-
-            int? answer2 = null;
+            int answer = 0;
 
             if (IsVideo)
             {
@@ -66,19 +54,16 @@ namespace BYTDownloader
                                   "1: Best quality\n2: worst quality\n3: Set manually for each video the quality");
 
                 Console.Write("Your answer: ");
-                answer2 = int.Parse(Console.ReadLine());
+                answer = int.Parse(Console.ReadLine());
             }
 
-            ListMaxLength = list.Count;
-
-            for (int i = 0; i < ListMaxLength; i++)
+            for (int i = 0; i < SharedMethods.ListMaxLength; i++)
             {
-                var client = new YoutubeClient();
-                var video = await client.Videos.GetAsync(list[i]);
+                var video = client.Videos.GetAsync(list[i]).Result;
 
                 Title = SharedMethods.CheckIfAvailableName(SharedMethods.Path, SharedMethods.ENGAlphabet(video.Title), format);
-                var manifest = await client.Videos.Streams.GetManifestAsync(video.Id);
-               
+                var manifest = client.Videos.Streams.GetManifestAsync(video.Id).Result;
+
                 if (IsVideo)
                 {
                     mediaStreamInfos = new IStreamInfo[]
@@ -87,7 +72,7 @@ namespace BYTDownloader
                         manifest.GetVideoOnly().WithHighestVideoQuality()
                     };
 
-                    switch (answer2.Value)
+                    switch (answer)
                     {
                         case 1:
                             break;
@@ -111,64 +96,16 @@ namespace BYTDownloader
                     }
 
                     Console.Title = "BYTDownloader";
-                    format = Format.Mp4;
+                    format = Format.mp4;
                 }
                 else if (!IsVideo)
                 {
-                    format = Format.Mp3;
+                    format = Format.mp3;
                     mediaStreamInfos = new IStreamInfo[] { manifest.GetAudioOnly().WithHighestBitrate() };
                 }
 
-                streamInfosList.Add(mediaStreamInfos);
+                StreamInfosList.Add(mediaStreamInfos);
             }
-        }
-
-        public override async Task DownloadFile(YoutubeClient client, IReadOnlyList<IStreamInfo> readOnlyList, string path, string title, Format format)
-        {
-            Console.WriteLine("Download has started!");
-            YoutubeConverter converter = new YoutubeConverter(client);
-
-            for (int i = 0; i < ListMaxLength; i++)
-            {
-                title = SharedMethods.CheckIfAvailableName(path, SharedMethods.ENGAlphabet(title), format);
-                await converter.DownloadAndProcessMediaStreamsAsync(streamInfosList[i], $"{path}\\{title}.{format.ToString().ToLower()}", format.ToString().ToLower(), pro);
-            }
-        }
-
-        private void HandleProgress2(double progress)
-        {
-            string x = ((int)(progress * 100)).ToString();
-            Console.Title = string.Format("BYTDownloader | {0}%", x);
-
-            if (CalcIfDoubleUsed(progress))
-            {
-                Current++;
-                Console.WriteLine($"{Current} / {ListMaxLength}");
-
-                if (Current == ListMaxLength)
-                {
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Thread.Sleep(1000);
-                    Console.WriteLine("Done");
-                }
-            }
-        }
-
-        private bool CalcIfDoubleUsed(double progress)
-        {
-            if (progress == 1)
-            {
-                if (progress == Previous)
-                {
-                    return false;
-                }
-
-                Previous = progress;
-                return true;
-            }
-
-            Previous = progress;
-            return false;
         }
     }
 }

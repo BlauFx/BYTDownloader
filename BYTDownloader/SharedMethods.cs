@@ -14,10 +14,50 @@ namespace BYTDownloader
 
         private static int Current = 0;
 
-        public static void HandleProgress(double progress, bool Playlist, int PlaylistLength = 0)
+        public static double Previous { get; set; } = 0;
+
+        public static int ListMaxLength { get; set; } = 0;
+
+        public static void HandleProgress(double progress, bool Queue = false, bool Playlist = false, int PlaylistLength = 0)
         {
             string x = ((int)(progress * 100)).ToString();
             Console.Title = string.Format("BYTDownloader | {0}%", x);
+
+            if (Queue)
+            {
+                static bool CalcIfDoubleUsed(double progress)
+                {
+                    if (progress == 1)
+                    {
+                        if (progress == Previous)
+                            return false;
+
+                        Previous = progress;
+                        return true;
+                    }
+
+                    Previous = progress;
+                    return false;
+                }
+
+                string x2 = ((int)(progress * 100)).ToString();
+                Console.Title = string.Format("BYTDownloader | {0}%", x2);
+
+                if (CalcIfDoubleUsed(progress))
+                {
+                    Current++;
+                    Console.WriteLine($"{Current} / {ListMaxLength}");
+
+                    if (Current == ListMaxLength)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Thread.Sleep(1000);
+                        Console.WriteLine("Done");
+                    }
+                }
+
+                return;
+            }
 
             if (Playlist && Current == PlaylistLength && x == "100" || !Playlist && x == "100")
             {
@@ -56,9 +96,9 @@ namespace BYTDownloader
             return Titel;
         }
 
-        public static string CheckIfAvailableName(string path, string name, Format format = Format.Mp3)
+        public static string CheckIfAvailableName(string path, string name, Format format = Format.mp3)
         {
-            if (File.Exists(path + $"\\{name}.{format.ToString().ToLower()}"))
+            if (File.Exists($"{path}\\{name}.{format.ToString().ToLower()}"))
             {
                 Files++;
                 return CheckIfAvailableName(path, FileCutter(name, Files), format);

@@ -11,37 +11,56 @@ namespace BYTDownloader
 {
     public abstract class Backend
     {
-        protected IProgress<double> pro;
+        protected IProgress<double> pro { get; set; }
 
-        public YoutubeClient client = new YoutubeClient();
+        public YoutubeClient client { get; set; } = new YoutubeClient();
 
         public string Title { get; set; }
 
-        public IStreamInfo[] mediaStreamInfos = null;
+        public IStreamInfo[] mediaStreamInfos { get; set; } = null;
 
-        public List<string> list;
+        public Format format { get; set; }
 
-        public Format format;
+        public List<IStreamInfo[]> StreamInfosList { get; set; } = new List<IStreamInfo[]>();
 
-        public List<IStreamInfo[]> streamInfosList = new List<IStreamInfo[]>();
+        public List<string> list { get; set; }
 
-        protected Backend(bool IsVideo, List<string> list = null)
+        protected Backend(bool IsVideo)
         {
             pro = new Progress<double>((p) => SharedMethods.HandleProgress(p, false));
-            this.list = list;
 
-            PrepareDownload(IsVideo).GetAwaiter().GetResult();
-            DownloadFile(client, mediaStreamInfos, SharedMethods.Path, Title, IsVideo ? Format.Mp4 : Format.Mp3).GetAwaiter().GetResult();
+            PrepareDownload(IsVideo);
+            DownloadFile(client, mediaStreamInfos, SharedMethods.Path, Title, IsVideo ? Format.mp4 : Format.mp3, false);
         }
 
-        public abstract Task PrepareDownload(bool IsVideo);
+        protected Backend(List<string> list, bool IsVideo)
+        {
+            pro = new Progress<double>((p) => SharedMethods.HandleProgress(p, true));
 
-        public virtual async Task DownloadFile(YoutubeClient client, IReadOnlyList<IStreamInfo> readOnlyList, string path, string tit, Format format)
+            this.list = list;
+            SharedMethods.ListMaxLength = list.Count;
+
+            PrepareDownload(IsVideo);
+            DownloadFile(client, mediaStreamInfos, SharedMethods.Path, Title, IsVideo ? Format.mp4 : Format.mp3, true);
+        }
+
+        public abstract void PrepareDownload(bool IsVideo);
+
+        private async void DownloadFile(YoutubeClient client, IReadOnlyList<IStreamInfo> readOnlyList, string path, string title, Format format, bool IsQueue)
         {
             Console.SetIn(TextReader.Null);
-
             Console.WriteLine("Download has started!");
-            await new YoutubeConverter(client).DownloadAndProcessMediaStreamsAsync(readOnlyList, $"{path}\\{tit}.{format}", format.ToString(), pro);
+
+            if (IsQueue)
+            {
+                YoutubeConverter converter = new YoutubeConverter(client);
+
+                for (int i = 0; i < SharedMethods.ListMaxLength; i++)
+                    await converter.DownloadAndProcessMediaStreamsAsync(StreamInfosList[i],
+                        $"{path}\\{SharedMethods.CheckIfAvailableName(path, SharedMethods.ENGAlphabet(title), format)}.{format.ToString().ToLower()}", format.ToString().ToLower(), pro);
+            }
+            else
+                await new YoutubeConverter(client).DownloadAndProcessMediaStreamsAsync(readOnlyList, $"{path}\\{title}.{format}", format.ToString().ToLower(), pro);
         }
     }
 
@@ -63,7 +82,7 @@ namespace BYTDownloader
 
         public int Part { get; set; }
 
-        public Format Format { get; set; } = Format.Mp4;
+        public Format Format { get; set; } = Format.mp4;
 
         public int CurrentPos { get; set; } = 1;
 
@@ -74,7 +93,7 @@ namespace BYTDownloader
             Console.WriteLine("1: Specific part?\n2: Whole playlist");
 
             int input = int.Parse(Console.ReadLine());
-            bool WholePlaylist = input == 1 ? false : true;
+            bool WholePlaylist = input != 1;
 
             PrepareDownloadBackend(WholePlaylist);
             PrepareDownload(WholePlaylist).GetAwaiter().GetResult();

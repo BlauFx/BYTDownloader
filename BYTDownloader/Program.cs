@@ -114,8 +114,8 @@ namespace BYTDownloader
 
     public enum Format
     {
-        Mp3,
-        Mp4,
+        mp3,
+        mp4,
         wav,
     }
 }

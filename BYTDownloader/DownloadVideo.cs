@@ -1,25 +1,24 @@
 using System;
 using System.Linq;
-using System.Threading.Tasks;
 using YoutubeExplode.Videos.Streams;
 
 namespace BYTDownloader
 {
     public class DownloadVideo : Backend
     {
-        public DownloadVideo() : base(true) { }
+        public DownloadVideo() : base (true) { }
 
-        public override async Task PrepareDownload(bool IsVideo)
+        public override void PrepareDownload(bool IsVideo)
         {
             Console.Clear();
             Console.WriteLine("URL: ");
 
             Console.Title = "BYTDownloader | Loading...";
 
-            var video = await client.Videos.GetAsync(Console.ReadLine());
-            var manifest = await client.Videos.Streams.GetManifestAsync(video.Id);
+            var video = client.Videos.GetAsync(Console.ReadLine()).Result;
+            var manifest = client.Videos.Streams.GetManifestAsync(video.Id).Result;
 
-            Title = SharedMethods.CheckIfAvailableName(SharedMethods.Path, SharedMethods.ENGAlphabet(video.Title), Format.Mp4);
+            Title = SharedMethods.CheckIfAvailableName(SharedMethods.Path, SharedMethods.ENGAlphabet(video.Title), Format.mp4);
             Console.WriteLine("In which resolution do you want to download the video?\n" + "Type the Number that is displayed before the resolution / fps");
 
             var allqualities = manifest.GetVideoOnly().ToArray();
