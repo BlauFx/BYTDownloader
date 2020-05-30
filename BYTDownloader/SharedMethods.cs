@@ -58,13 +58,22 @@ namespace BYTDownloader
 
                 return;
             }
+            else
+            {
+                if (x == "100")
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Thread.Sleep(1000);
+                    Console.WriteLine("Done");
+                }
+            }
 
             Current++;
         }
 
         public static string ENGAlphabet(string tit)
         {
-            char[] list = "ABCDEFGHIJKLMNOPQRSTUVWXYZ()$.-[]&'".ToCharArray();
+            char[] list = "ABCDEFGHIJKLMNOPQRSTUVWXYZ()$.-[]&'!".ToCharArray();
             List<string> tmp = new List<string>();
 
             string Titel = string.Empty;
@@ -99,7 +108,7 @@ namespace BYTDownloader
                 return name;
         }
 
-        public static string FileCutter(string str, int num) 
+        public static string FileCutter(string str, int num)
             => str.Contains("(") ? $"{str.Substring(0, str.IndexOf("(", StringComparison.Ordinal) - 1)} ({num})" : $"{str} ({num})";
     }
 }
