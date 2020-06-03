@@ -6,10 +6,10 @@ namespace BYTDownloader
 {
     public class DownloadSong : Backend
     {
-        public DownloadSong() : base (false) { }
-
-        public override void PrepareDownload(bool IsVideo)
+        public override void PrepareDownload()
         {
+            IsVideo = false;
+
             Console.Clear();
             Console.WriteLine("URL: ");
 

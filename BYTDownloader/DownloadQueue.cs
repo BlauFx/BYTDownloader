@@ -35,15 +35,15 @@ namespace BYTDownloader
             Console.WriteLine("2: Song");
 
             int input = int.Parse(Console.ReadLine());
-            new DownloadQueue(tmp, (bool)(input == 1 ? true : (input == 2 ? false : new bool?())));
+            new DownloadQueue(tmp) { IsVideo = (bool)(input == 1 ? true : (input == 2 ? false : new bool?())) };
         }
     }
 
     internal class DownloadQueue : Backend
     {
-        public DownloadQueue(List<string> list, bool IsVideo) : base(list, IsVideo) { }
+        public DownloadQueue(List<string> list) : base(list) { }
 
-        public override void PrepareDownload(bool IsVideo)
+        public override void PrepareDownload()
         {
             Console.Clear();
             int answer = 0;

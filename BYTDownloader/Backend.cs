@@ -25,26 +25,28 @@ namespace BYTDownloader
 
         public List<string> list { get; set; }
 
-        protected Backend(bool IsVideo)
+        public bool IsVideo { get; set; }
+
+        protected Backend()
         {
             pro = new Progress<double>((p) => SharedMethods.HandleProgress(p, false));
 
-            PrepareDownload(IsVideo);
+            PrepareDownload();
             DownloadFile(client, mediaStreamInfos, SharedMethods.Path, Title, IsVideo ? Format.mp4 : Format.mp3, false);
         }
 
-        protected Backend(List<string> list, bool IsVideo)
+        protected Backend(List<string> list)
         {
             pro = new Progress<double>((p) => SharedMethods.HandleProgress(p, true));
 
             this.list = list;
             SharedMethods.ListMaxLength = list.Count;
 
-            PrepareDownload(IsVideo);
+            PrepareDownload();
             DownloadFile(client, mediaStreamInfos, SharedMethods.Path, Title, IsVideo ? Format.mp4 : Format.mp3, true);
         }
 
-        public abstract void PrepareDownload(bool IsVideo);
+        public abstract void PrepareDownload();
 
         private async void DownloadFile(YoutubeClient client, IReadOnlyList<IStreamInfo> readOnlyList, string path, string title, Format format, bool IsQueue)
         {
