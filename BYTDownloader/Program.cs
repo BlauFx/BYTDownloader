@@ -99,7 +99,7 @@ namespace BYTDownloader
         {
             Console.Clear();
 
-            Console.WriteLine($"BYTDownloader current version: v{Assembly.GetExecutingAssembly().GetName().Version}\n+" +
+            Console.WriteLine($"BYTDownloader current version: v{Assembly.GetExecutingAssembly().GetName().Version}\n" +
                 $"Using Newtonsoft.Json: {Assembly.GetAssembly(typeof(Newtonsoft.Json.JsonConvert)).GetName().Version}\n" +
                 $"Using YoutubeExplode: {Assembly.GetAssembly(typeof(YoutubeExplode.YoutubeClient)).GetName().Version}\n" +
                 $"Using YoutubeExplode.Converter: {Assembly.GetAssembly(typeof(YoutubeExplode.Converter.YoutubeConverter)).GetName().Version}\n" +
