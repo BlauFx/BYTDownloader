@@ -8,6 +8,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 using static System.IO.Directory;
 
@@ -40,13 +41,6 @@ namespace BYTDownloader
 
                         var path = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
                         string projectName = Path.GetFileName(path);
-
-                        if (!projectName.Equals("BYTDownloader", StringComparison.OrdinalIgnoreCase))
-                        {
-                            Console.WriteLine("The executable needs to be located in a folder called \"BYTDownloader\"\n\nThe reason for this is the updater deletes/replaces every file in the current location.\nThis is very dangerous if the executable is located in a very important location\nFor example the desktop or some folder with important files!");
-                            Console.ReadLine();
-                            Environment.Exit(0);
-                        }
 
                         DownloadUpdate("Updater.exe", true);
                         DownloadUpdate("win-x64.zip", false);
@@ -92,7 +86,7 @@ namespace BYTDownloader
 
         public void DownloadUpdate(string str, bool Update)
         {
-            var x = (Update == true ? Github_ReleasesUpdater : Github_Releases)?.FirstOrDefault();
+            var x = (Update ? Github_ReleasesUpdater : Github_Releases)?.FirstOrDefault();
             Assets assets = x?.assets?.FirstOrDefault(y => y.name.Equals(str));
 
             if (Update)
@@ -163,7 +157,7 @@ namespace BYTDownloader
             {
                 StartInfo = new ProcessStartInfo("cmd.exe")
                 {
-                    Arguments = $"/C start {ExePath}\\temp\\Updater.exe {PID} {ExePath}",
+                    Arguments = $"/C start \"\" \"{ExePath}\\temp\\Updater.exe\" {PID}",
                     UseShellExecute = false,
                     WindowStyle = ProcessWindowStyle.Hidden,
                     CreateNoWindow = true,
