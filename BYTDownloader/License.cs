@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Reflection;
@@ -6,16 +7,15 @@ namespace BYTDownloader
 {
     public class License
     {
-        private readonly string[] license = new string[6];
-        
+        private readonly List<string> license = new List<string>();
+
         public License()
         {
-            license[0] = "BYTDownloader";
-            license[1] = "YoutubeExplode";
-            license[2] = "YoutubeExplode.Converter";
-            license[3] = "Newtonsoft.Json";
-            license[4] = "FFmpeg.NET";
-            license[5] = "Updater";
+            license.Add("BYTDownloader");
+            license.Add("YoutubeExplode");
+            license.Add("YoutubeExplode.Converter");
+            license.Add("FFmpeg.NET");
+            license.Add("Updater");
 
             string path = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "Licenses");
 
@@ -24,16 +24,13 @@ namespace BYTDownloader
 
             using HttpClient httpClient = new HttpClient();
 
-            for (int i = 0; i < license.Length; i++)
+            for (int i = 0; i < license.Count; i++)
             {
-                if (!File.Exists($"{path}\\{license[i]}.txt"))
-                {
-                    try 
-                    {
-                        using var fs = new FileStream($"{path}\\{license[i]}.txt", FileMode.CreateNew);
-                        httpClient.GetStreamAsync($"https://raw.githubusercontent.com/BlauFx/BYTDownloader/master/Licenses/{license[i]}.txt").Result.CopyTo(fs);
-                    } catch { }
-                }
+                if (File.Exists($"{path}\\{license[i]}.txt"))
+                    continue;
+
+                using var fs = new FileStream($"{path}\\{license[i]}.txt", FileMode.CreateNew);
+                httpClient.GetStreamAsync($"https://raw.githubusercontent.com/BlauFx/BYTDownloader/master/Licenses/{license[i]}.txt").Result.CopyTo(fs);
             }
         }
     }
