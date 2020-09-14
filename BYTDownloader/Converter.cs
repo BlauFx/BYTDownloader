@@ -4,7 +4,6 @@ using FFmpeg.NET.Events;
 using System;
 using System.IO;
 using System.Reflection;
-using System.Text;
 using System.Threading;
 
 namespace BYTDownloader
@@ -45,7 +44,7 @@ namespace BYTDownloader
             else
             {
                 Console.WriteLine("Could not create new file\n");
-                Console.WriteLine("Possible errors: \ninput file does not exist / is not an audio/video file\nformat is wrong");
+                Console.WriteLine("Possible errors: \ninput file does not exist / is not an audio/video file\nformat is wrong or not supported");
             }
         }
 

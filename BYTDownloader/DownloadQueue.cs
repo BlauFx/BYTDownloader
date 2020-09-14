@@ -1,18 +1,19 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using YoutubeExplode;
+using YoutubeExplode.Converter;
 using YoutubeExplode.Videos.Streams;
 
 namespace BYTDownloader
 {
     public class Queue
     {
+        private readonly List<string> tmp = new List<string>();
+
         public Queue()
         {
-            Console.WriteLine("Add links to the queue!");
-            Console.WriteLine("If you're done than type: Done");
-
-            List<string> tmp = new List<string>();
+            Console.WriteLine("Add links to the queue!\nIf you're done than type: Done");
 
             while (true)
             {
@@ -29,48 +30,39 @@ namespace BYTDownloader
 
             Console.Clear();
 
-            Console.WriteLine("Do you want to download it as a video or as a song?");
-
-            Console.WriteLine("1: Video");
-            Console.WriteLine("2: Song");
+            Console.WriteLine("Do you want to download it as a video or as a song?\n" +
+                "1: Video\n" +
+                "2: Song");
 
             int input = int.Parse(Console.ReadLine());
-            new DownloadQueue(tmp) { IsVideo = (bool)(input == 1 ? true : (input == 2 ? false : new bool?())) };
+            HandleRequest(input == 1 || input == 2 ? false : throw new Exception());
         }
-    }
 
-    internal class DownloadQueue : Backend
-    {
-        public DownloadQueue(List<string> list) : base(list) { }
-
-        public override void PrepareDownload()
+        private void HandleRequest(bool IsVideo)
         {
-            Console.Clear();
-            int answer = 0;
+            List<IStreamInfo[]> StreamInfosList = new List<IStreamInfo[]>();
+            List<string> titles = new List<string>();
+
+            YoutubeClient client = new YoutubeClient();
+            Format format = IsVideo ? Format.mp4 : Format.mp3;
 
             if (IsVideo)
             {
-                Console.WriteLine("You have these options in which the quality of the playlist should be downloaded:\n" +
-                                  "1: Best quality\n2: worst quality\n3: Set manually for each video the quality");
+                Console.Write("You can choose between these options:\n" +
+                    "1: Best quality\n" +
+                    "2: worst quality\n" +
+                    "3: Set manually for each video the quality\n" +
+                    "Your answer: ");
 
-                Console.Write("Your answer: ");
-                answer = int.Parse(Console.ReadLine());
-            }
+                int answer = int.Parse(Console.ReadLine());
 
-            for (int i = 0; i < SharedMethods.ListMaxLength; i++)
-            {
-                var video = client.Videos.GetAsync(list[i]).Result;
-
-                Title = SharedMethods.CheckIfAvailableName(SharedMethods.Path, SharedMethods.ENGAlphabet(video.Title), format);
-                var manifest = client.Videos.Streams.GetManifestAsync(video.Id).Result;
-
-                if (IsVideo)
+                for (int i = 0; i < tmp.Count; i++)
                 {
-                    mediaStreamInfos = new IStreamInfo[]
-                    {
-                        manifest.GetAudioOnly().WithHighestBitrate(),
-                        manifest.GetVideoOnly().WithHighestVideoQuality()
-                    };
+                    var video = client.Videos.GetAsync(tmp[i]).Result;
+                    var manifest = client.Videos.Streams.GetManifestAsync(video.Id).Result;
+
+                    var mediaStreamInfos = new IStreamInfo[] { manifest.GetAudioOnly().WithHighestBitrate(), manifest.GetVideoOnly().WithHighestVideoQuality() };
+                    var title = SharedMethods.CheckIfAvailableName(SharedMethods.Path, SharedMethods.ENGAlphabet(video.Title), format);
 
                     switch (answer)
                     {
@@ -95,16 +87,30 @@ namespace BYTDownloader
                             throw new Exception();
                     }
 
-                    Console.Title = "BYTDownloader";
-                    format = Format.mp4;
+                    StreamInfosList.Add(mediaStreamInfos);
+                    titles.Add(title);
                 }
-                else if (!IsVideo)
+            }
+            else
+            {
+                for (int i = 0; i < tmp.Count; i++)
                 {
-                    format = Format.mp3;
-                    mediaStreamInfos = new IStreamInfo[] { manifest.GetAudioOnly().WithHighestBitrate() };
-                }
+                    var video = client.Videos.GetAsync(tmp[i]).Result;
+                    var manifest = client.Videos.Streams.GetManifestAsync(video.Id).Result;
 
-                StreamInfosList.Add(mediaStreamInfos);
+                    var mediaStreamInfos = new IStreamInfo[] { manifest.GetAudioOnly().WithHighestBitrate() };
+                    var title = SharedMethods.CheckIfAvailableName(SharedMethods.Path, SharedMethods.ENGAlphabet(video.Title), format);
+
+                    StreamInfosList.Add(mediaStreamInfos);
+                    titles.Add(title);
+                }
+            }
+
+            for (int i = 0; i < StreamInfosList.Count; i++)
+            {
+                new YoutubeConverter(client).DownloadAndProcessMediaStreamsAsync(StreamInfosList[i],
+                    $"{Environment.GetFolderPath(Environment.SpecialFolder.Desktop)}\\{titles[i]}.{format.ToString().ToLower()}", format.ToString().ToLower(),
+                    new Progress<double>((p) => SharedMethods.HandleProgress(p))).GetAwaiter().GetResult();
             }
         }
     }

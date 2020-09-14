@@ -38,7 +38,7 @@ namespace BYTDownloader
             {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine("ffmpeg.exe not found");
-                Console.WriteLine("Start downloading ffmpeg.exe");
+                Console.WriteLine("Downloading ffmpeg.exe");
 
                 using (var fs = new FileStream(CurrentDirectory + "//FFMPEG.zip", FileMode.CreateNew))
                     using (HttpClient httpClient = new HttpClient())

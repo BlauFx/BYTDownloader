@@ -1,39 +1,46 @@
 using System;
 using System.Linq;
+using YoutubeExplode;
+using YoutubeExplode.Converter;
 using YoutubeExplode.Videos.Streams;
 
 namespace BYTDownloader
 {
-    public class DownloadVideo : Backend
+    public class DownloadVideo
     {
-        public override void PrepareDownload()
+        public DownloadVideo()
         {
-            IsVideo = true;
-
             Console.Clear();
             Console.WriteLine("URL: ");
 
-            Console.Title = "BYTDownloader | Loading...";
+            YoutubeClient client = new YoutubeClient();
 
             var video = client.Videos.GetAsync(Console.ReadLine()).Result;
+            Console.Title = "BYTDownloader | Loading...";
+
             var manifest = client.Videos.Streams.GetManifestAsync(video.Id).Result;
-
-            Title = SharedMethods.CheckIfAvailableName(SharedMethods.Path, SharedMethods.ENGAlphabet(video.Title), Format.mp4);
-            Console.WriteLine("In which resolution do you want to download the video?\n" + "Type the Number that is displayed before the resolution / fps");
-
             var allqualities = manifest.GetVideoOnly().ToArray();
 
             for (int i = 0; i < allqualities.Length; i++)
                 Console.WriteLine($"{i}: {allqualities[i].Resolution} - {allqualities[i].Framerate} - {allqualities[i].Bitrate} - {allqualities[i].Container}");
 
             Console.Title = "BYTDownloader";
-            Console.WriteLine("Your answer: ");
+            Console.Write("Your answer: ");
 
-            mediaStreamInfos = new IStreamInfo[]
+            var mediaStreamInfos = new IStreamInfo[]
             {
                 manifest.GetAudioOnly().WithHighestBitrate(),
-                manifest.GetVideoOnly().ToArray()[int.Parse(Console.ReadLine())]
+                manifest.GetVideoOnly().ToArray()[int.Parse(Console.ReadLine()!)]
             };
+
+            Format format = Format.mp4;
+            var title = SharedMethods.CheckIfAvailableName(SharedMethods.Path, SharedMethods.ENGAlphabet(video.Title), format);
+
+            new YoutubeConverter(client).DownloadAndProcessMediaStreamsAsync(
+                mediaStreamInfos,
+                $"{Environment.GetFolderPath(Environment.SpecialFolder.Desktop)}\\{title}.{format.ToString().ToLower()}",
+                format.ToString().ToLower(),
+                new Progress<double>((p) => SharedMethods.HandleProgress(p))).GetAwaiter().GetResult();
         }
     }
 }
