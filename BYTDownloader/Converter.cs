@@ -65,11 +65,8 @@ namespace BYTDownloader
             int num2 = inputFile.LastIndexOf(".", StringComparison.Ordinal);
             string name = inputFile[num..num2];
 
-            return SharedMethods.CheckIfAvailableName(Path.GetDirectoryName(inputFile), name, ParseFormat(format));
+            return SharedMethods.CheckIfAvailableName(Path.GetDirectoryName(inputFile), name, format);
         }
-
-        private Format ParseFormat(string format)
-            => string.IsNullOrEmpty(format) != true ? (Format)Enum.Parse(typeof(Format), format, true) : throw new NullReferenceException("string can not be null");
 
         private void Engine_ConvertProgressEvent(object sender, ConversionProgressEventArgs e)
             => Console.WriteLine("{0}%", ((int)Math.Round(100 * (double)e.ProcessedDuration.Ticks / e.TotalDuration.Ticks)).ToString());

@@ -22,14 +22,10 @@ namespace BYTDownloader
 
             var mediaStreamInfos = new IStreamInfo[] { manifest.GetAudioOnly().WithHighestBitrate() };
 
-            Format format = Format.mp3;
-            var title = SharedMethods.CheckIfAvailableName(SharedMethods.Path, SharedMethods.ENGAlphabet(video.Title), format);
+            string format = Format.mp3.ToString().ToLower();
+            var title = SharedMethods.CheckIfAvailableName(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), video.Title, format);
 
-            new YoutubeConverter(client).DownloadAndProcessMediaStreamsAsync(
-                mediaStreamInfos,
-                $"{Environment.GetFolderPath(Environment.SpecialFolder.Desktop)}\\{title}.{format.ToString().ToLower()}",
-                format.ToString().ToLower(),
-                new Progress<double>((p) => SharedMethods.HandleProgress(p))).GetAwaiter().GetResult();
+            new YoutubeConverter(client).DownloadAndProcessMediaStreamsAsync(mediaStreamInfos, $"{Environment.GetFolderPath(Environment.SpecialFolder.Desktop)}\\{title}.{format}", format, new Progress<double>((p) => SharedMethods.HandleProgress(p))).GetAwaiter().GetResult();
         }
     }
 }

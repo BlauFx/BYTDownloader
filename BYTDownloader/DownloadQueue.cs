@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using YoutubeExplode;
 using YoutubeExplode.Converter;
 using YoutubeExplode.Videos.Streams;
@@ -29,13 +30,10 @@ namespace BYTDownloader
             }
 
             Console.Clear();
-
-            Console.WriteLine("Do you want to download it as a video or as a song?\n" +
-                "1: Video\n" +
-                "2: Song");
+            Console.WriteLine("Do you want to download it as a video or as a song?\n1: Video\n2: Song");
 
             int input = int.Parse(Console.ReadLine());
-            HandleRequest(input == 1 || input == 2 ? false : throw new Exception());
+            HandleRequest(input == 1 || input == 2 ? false : throw new Exception($"input can't be {input}. It must be either 1 or 2."));
         }
 
         private void HandleRequest(bool IsVideo)
@@ -44,7 +42,7 @@ namespace BYTDownloader
             List<string> titles = new List<string>();
 
             YoutubeClient client = new YoutubeClient();
-            Format format = IsVideo ? Format.mp4 : Format.mp3;
+            string format = (IsVideo ? Format.mp4 : Format.mp3).ToString().ToLower();
 
             if (IsVideo)
             {
@@ -62,7 +60,7 @@ namespace BYTDownloader
                     var manifest = client.Videos.Streams.GetManifestAsync(video.Id).Result;
 
                     var mediaStreamInfos = new IStreamInfo[] { manifest.GetAudioOnly().WithHighestBitrate(), manifest.GetVideoOnly().WithHighestVideoQuality() };
-                    var title = SharedMethods.CheckIfAvailableName(SharedMethods.Path, SharedMethods.ENGAlphabet(video.Title), format);
+                    var title = SharedMethods.CheckIfAvailableName(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), video.Title, format);
 
                     switch (answer)
                     {
@@ -99,7 +97,7 @@ namespace BYTDownloader
                     var manifest = client.Videos.Streams.GetManifestAsync(video.Id).Result;
 
                     var mediaStreamInfos = new IStreamInfo[] { manifest.GetAudioOnly().WithHighestBitrate() };
-                    var title = SharedMethods.CheckIfAvailableName(SharedMethods.Path, SharedMethods.ENGAlphabet(video.Title), format);
+                    var title = SharedMethods.CheckIfAvailableName(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), video.Title, format);
 
                     StreamInfosList.Add(mediaStreamInfos);
                     titles.Add(title);
@@ -108,10 +106,28 @@ namespace BYTDownloader
 
             for (int i = 0; i < StreamInfosList.Count; i++)
             {
-                new YoutubeConverter(client).DownloadAndProcessMediaStreamsAsync(StreamInfosList[i],
-                    $"{Environment.GetFolderPath(Environment.SpecialFolder.Desktop)}\\{titles[i]}.{format.ToString().ToLower()}", format.ToString().ToLower(),
-                    new Progress<double>((p) => SharedMethods.HandleProgress(p))).GetAwaiter().GetResult();
+                try
+                {
+                    titles[i] = SharedMethods.CheckIfAvailableName(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), titles[i], format);
+                    new YoutubeConverter(client).DownloadAndProcessMediaStreamsAsync(StreamInfosList[i], $"{Environment.GetFolderPath(Environment.SpecialFolder.Desktop)}\\{titles[i]}.{format}", format, new Progress<double>((p) => SharedMethods.HandleProgress(p, true))).GetAwaiter().GetResult();
+                }
+                catch
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+
+                    Console.WriteLine($"{i + 1} / {StreamInfosList.Count} has been skipped => ({titles[i]})");
+                    Console.ResetColor();
+
+                    continue;
+                }
+
+                Console.WriteLine($"{i + 1} / {StreamInfosList.Count}");
             }
+
+            Console.ForegroundColor = ConsoleColor.Green;
+
+            Thread.Sleep(1000);
+            Console.WriteLine("Done");
         }
     }
 }

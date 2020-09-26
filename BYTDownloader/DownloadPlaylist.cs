@@ -17,7 +17,7 @@ namespace BYTDownloader
         private IStreamInfo[] MediaStreamInfos;
         private readonly IReadOnlyList<Video> PlaylistVideos;
 
-        private readonly Format format;
+        private readonly Format Frmt;
 
         public DownloadPlaylist()
         {
@@ -31,7 +31,7 @@ namespace BYTDownloader
                 "1: Video\n" +
                 "2: Song");
 
-            format = Console.ReadLine() == "1" ? Format.mp4 : Format.mp3;
+            Frmt = Console.ReadLine() == "1" ? Format.mp4 : Format.mp3;
             Console.Clear();
 
             Console.Title = "BYTDownloader | Loading...";
@@ -53,7 +53,7 @@ namespace BYTDownloader
 
             string Path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\Playlist";
 
-            if (format == Format.mp4)
+            if (Frmt == Format.mp4)
             {
                 Console.Write("You can choose between these options:\n" +
                     "1: Best quality\n" +
@@ -73,7 +73,7 @@ namespace BYTDownloader
                     var video = await client.Videos.GetAsync(PlaylistVideos.ElementAt(i).Url);
                     var manifest = await client.Videos.Streams.GetManifestAsync(video.Id);
 
-                    if (format == Format.mp4)
+                    if (Frmt == Format.mp4)
                     {
                         MediaStreamInfos = new IStreamInfo[]
                         {
@@ -104,29 +104,30 @@ namespace BYTDownloader
                                 throw new Exception();
                         }
                     }
-                    else if (format == Format.mp3) //Sound
+                    else if (Frmt == Format.mp3) //Sound
                     {
                         MediaStreamInfos = new IStreamInfo[] { manifest.GetAudioOnly().WithHighestBitrate() };
                     }
 
-                    var title = SharedMethods.CheckIfAvailableName(SharedMethods.Path + "\\Playlist", SharedMethods.ENGAlphabet(PlaylistVideos[i].Title), format);
-                    await converter.DownloadAndProcessMediaStreamsAsync(MediaStreamInfos, $"{Path}\\{title}.{format.ToString().ToLower()}", format.ToString().ToLower(),
-                        new Progress<double>((p) => SharedMethods.HandleProgress(p, false)));
+                    string format = Frmt.ToString().ToLower();
+                    var title = SharedMethods.CheckIfAvailableName(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\Playlist", PlaylistVideos[i].Title, format);
+
+                    await converter.DownloadAndProcessMediaStreamsAsync(MediaStreamInfos, $"{Path}\\{title}.{format}", format, new Progress<double>((p) => SharedMethods.HandleProgress(p, true)));
                 }
                 catch
                 {
                     Console.ForegroundColor = ConsoleColor.Red;
 
-                    Console.WriteLine($"{i} / {playlistLength} has been skipped => ({PlaylistVideos[i].Title})");
+                    Console.WriteLine($"{i + 1} / {playlistLength} has been skipped => ({PlaylistVideos[i].Title})");
                     Console.ResetColor();
 
                     continue;
                 }
 
-                Console.WriteLine($"{i} / {playlistLength}");
+                Console.WriteLine($"{i + 1} / {playlistLength}");
             }
 
-            Console.ForegroundColor = ConsoleColor.Red;
+            Console.ForegroundColor = ConsoleColor.Green;
 
             Thread.Sleep(1000);
             Console.WriteLine("Done");

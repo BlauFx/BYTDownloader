@@ -14,15 +14,14 @@ namespace BYTDownloader
             Console.WriteLine("URL: ");
 
             YoutubeClient client = new YoutubeClient();
-
             var video = client.Videos.GetAsync(Console.ReadLine()).Result;
+
             Console.Title = "BYTDownloader | Loading...";
-
             var manifest = client.Videos.Streams.GetManifestAsync(video.Id).Result;
-            var allqualities = manifest.GetVideoOnly().ToArray();
+            var allQualities = manifest.GetVideoOnly().ToArray();
 
-            for (int i = 0; i < allqualities.Length; i++)
-                Console.WriteLine($"{i}: {allqualities[i].Resolution} - {allqualities[i].Framerate} - {allqualities[i].Bitrate} - {allqualities[i].Container}");
+            for (int i = 0; i < allQualities.Length; i++)
+                Console.WriteLine($"{i}: {allQualities[i].Resolution} - {allQualities[i].Framerate} - {allQualities[i].Bitrate} - {allQualities[i].Container}");
 
             Console.Title = "BYTDownloader";
             Console.Write("Your answer: ");
@@ -33,14 +32,10 @@ namespace BYTDownloader
                 manifest.GetVideoOnly().ToArray()[int.Parse(Console.ReadLine()!)]
             };
 
-            Format format = Format.mp4;
-            var title = SharedMethods.CheckIfAvailableName(SharedMethods.Path, SharedMethods.ENGAlphabet(video.Title), format);
+            string format = Format.mp4.ToString().ToLower();
+            var title = SharedMethods.CheckIfAvailableName(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), video.Title, format);
 
-            new YoutubeConverter(client).DownloadAndProcessMediaStreamsAsync(
-                mediaStreamInfos,
-                $"{Environment.GetFolderPath(Environment.SpecialFolder.Desktop)}\\{title}.{format.ToString().ToLower()}",
-                format.ToString().ToLower(),
-                new Progress<double>((p) => SharedMethods.HandleProgress(p))).GetAwaiter().GetResult();
+            new YoutubeConverter(client).DownloadAndProcessMediaStreamsAsync(mediaStreamInfos, $"{Environment.GetFolderPath(Environment.SpecialFolder.Desktop)}\\{title}.{format}", format, new Progress<double>((p) => SharedMethods.HandleProgress(p))).GetAwaiter().GetResult();
         }
     }
 }

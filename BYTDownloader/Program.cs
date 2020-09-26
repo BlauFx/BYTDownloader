@@ -24,42 +24,41 @@ namespace BYTDownloader
             new License();
             Updater updater = new Updater();
 
+
             if (!updater.IsUpdating)
-                CheckFFMPEG();
+            {
+                var CurrentDirectory = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+
+                if (!File.Exists(CurrentDirectory + "\\ffmpeg.exe"))
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("ffmpeg.exe not found");
+                    Console.WriteLine("Downloading ffmpeg.exe");
+
+                    using (var fs = new FileStream(CurrentDirectory + "//FFMPEG.zip", FileMode.CreateNew))
+                    using (HttpClient httpClient = new HttpClient())
+                        httpClient.GetStreamAsync("https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2020-09-19-12-33/ffmpeg-n4.3.1-17-gdae6d75a31-win64-gpl-4.3.zip")?.Result.CopyTo(fs);
+
+                    Directory.CreateDirectory(CurrentDirectory + "//temp");
+                    ZipFile.ExtractToDirectory(CurrentDirectory + "//FFMPEG.zip", CurrentDirectory + "//temp");
+                    File.Move(CurrentDirectory + "//temp/ffmpeg-n4.3.1-17-gdae6d75a31-win64-gpl-4.3/bin/ffmpeg.exe", CurrentDirectory + "//ffmpeg.exe");
+
+                    Console.WriteLine("ffmpeg.exe downloaded!");
+                    Console.ResetColor();
+                    Console.Clear();
+                }
+
+                if (File.Exists(CurrentDirectory + "//FFMPEG.zip"))
+                    File.Delete(CurrentDirectory + "//FFMPEG.zip");
+
+                if (Directory.Exists(CurrentDirectory + "//temp"))
+                    Directory.Delete(CurrentDirectory + "//temp", true);
+
+                INI();
+            }
             else
                 Console.ReadLine();
-        }
 
-        private static void CheckFFMPEG()
-        {
-            var CurrentDirectory = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
-
-            if (!File.Exists(CurrentDirectory + "\\ffmpeg.exe"))
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("ffmpeg.exe not found");
-                Console.WriteLine("Downloading ffmpeg.exe");
-
-                using (var fs = new FileStream(CurrentDirectory + "//FFMPEG.zip", FileMode.CreateNew))
-                    using (HttpClient httpClient = new HttpClient())
-                        httpClient.GetStreamAsync("https://ffmpeg.zeranoe.com/builds/win64/static/ffmpeg-20200417-889ad93-win64-static.zip").Result.CopyTo(fs);
-
-                Directory.CreateDirectory(CurrentDirectory + "//temp");
-                ZipFile.ExtractToDirectory(CurrentDirectory + "//FFMPEG.zip", CurrentDirectory + "//temp");
-                File.Move(CurrentDirectory + "//temp/ffmpeg-20200417-889ad93-win64-static/bin/ffmpeg.exe", CurrentDirectory + "//ffmpeg.exe");
-
-                Console.WriteLine("ffmpeg.exe downloaded!");
-                Console.ResetColor();
-                Console.Clear();
-            }
-
-            if (File.Exists(CurrentDirectory + "//FFMPEG.zip"))
-                File.Delete(CurrentDirectory + "//FFMPEG.zip");
-
-            if (Directory.Exists(CurrentDirectory + "//temp"))
-                Directory.Delete(CurrentDirectory + "//temp", true);
-
-            INI();
         }
 
         private static void INI()

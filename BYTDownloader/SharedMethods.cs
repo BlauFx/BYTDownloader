@@ -8,8 +8,6 @@ namespace BYTDownloader
 {
     public static class SharedMethods
     {
-        public static string Path { get; } = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-
         private static int Files = 0;
 
         private static int Current = 0;
@@ -23,92 +21,45 @@ namespace BYTDownloader
             string x = ((int)(progress * 100)).ToString();
             Console.Title = string.Format("BYTDownloader | {0}%", x);
 
-            if (IfQueueOrPlaylist)
+            if (x == "100" && !IfQueueOrPlaylist)
             {
-                static bool CalcIfDoubleUsed(double progress)
-                {
-                    if (progress == 1)
-                    {
-                        if (progress == Previous)
-                            return false;
-
-                        Previous = progress;
-                        return true;
-                    }
-
-                    Previous = progress;
-                    return false;
-                }
-
-                string x2 = ((int)(progress * 100)).ToString();
-                Console.Title = string.Format("BYTDownloader | {0}%", x2);
-
-                if (CalcIfDoubleUsed(progress))
-                {
-                    Current++;
-                    Console.WriteLine($"{Current} / {ListMaxLength}");
-
-                    if (Current == ListMaxLength)
-                    {
-                        Console.ForegroundColor = ConsoleColor.Red;
-                        Thread.Sleep(1000);
-                        Console.WriteLine("Done");
-                    }
-                }
-
-                return;
+                Console.ForegroundColor = ConsoleColor.Green;
+                Thread.Sleep(1000);
+                Console.WriteLine("Done");
             }
-            else
-            {
-                if (x == "100")
-                {
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Thread.Sleep(1000);
-                    Console.WriteLine("Done");
-                }
-            }
-
-            Current++;
         }
 
-        public static string ENGAlphabet(string tit)
+        private static string FilterForbiddenChars(string title)
         {
-            char[] list = "ABCDEFGHIJKLMNOPQRSTUVWXYZ()$.-[]&'!".ToCharArray();
-            List<string> tmp = new List<string>();
+            var ForbiddenChars = "\\/:*?\"<>|".ToCharArray();
+            List<char> tmp = new List<char>();
 
-            string Titel = string.Empty;
-            foreach (var x in tit)
+            foreach (var x in title)
             {
-                bool result = x.ToString().Any(x => char.IsLetterOrDigit(x));
-                bool result2 = x.ToString().Any(x => char.IsWhiteSpace(x));
-                bool result3 = list.Any(s => s.ToString().Contains(x));
+                bool result = ForbiddenChars.Any(s => s.ToString().Contains(x));
 
-                if (result || result2 || result3)
-                    tmp.Add(x.ToString());
+                if (!result)
+                    tmp.Add(x);
                 else
-                    tmp.Add("#");
+                    tmp.Add('#');
             }
 
-            foreach (var x in tmp)
-            {
-                Titel += x;
-            }
-
-            return Titel;
+            return new string(tmp.ToArray());
         }
 
-        public static string CheckIfAvailableName(string path, string name, Format format = Format.mp3)
+        public static string CheckIfAvailableName(string path, string name, string format)
         {
-            if (File.Exists($"{path}\\{name}.{format.ToString().ToLower()}"))
-            {
-                Files++;
-                return CheckIfAvailableName(path, FileCutter(name, Files), format);
-            }
+            //Format x = !string.IsNullOrEmpty(format) ? (Format)Enum.Parse(typeof(Format), format, true) : throw new NullReferenceException("string can not be null");
+
+            //return File.Exists($"{path}\\{name}.{format.ToString().ToLower()}") ? name.Contains("(") ? CheckIfAvailableName(path, $"{name[..name.IndexOf("(", StringComparison.Ordinal - 1)]} ({Files++})", format) : $"{name} ({Files++})" : name;
+
+            name = FilterForbiddenChars(name);
+            format = format.ToLower();
+
+            if (File.Exists($"{path}\\{name}.{format}"))
+                return name.Contains("(") ? CheckIfAvailableName(path, $"{name[..name.IndexOf("(", StringComparison.Ordinal - 1)]} ({Files++})", format) : $"{name} ({Files++})";
             else
                 return name;
         }
-
-        public static string FileCutter(string str, int num)
-            => str.Contains("(") ? $"{str.Substring(0, str.IndexOf("(", StringComparison.Ordinal) - 1)} ({num})" : $"{str} ({num})";
     }
 }
