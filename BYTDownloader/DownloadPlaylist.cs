@@ -48,9 +48,6 @@ namespace BYTDownloader
             int playlistLength = PlaylistVideos.Count();
             int? answer = null;
 
-            YoutubeConverter converter = new YoutubeConverter(client);
-            //Console.WriteLine("Download has begun!");
-
             string Path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\Playlist";
 
             if (Frmt == Format.mp4)
@@ -112,7 +109,8 @@ namespace BYTDownloader
                     string format = Frmt.ToString().ToLower();
                     var title = SharedMethods.CheckIfAvailableName(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\Playlist", PlaylistVideos[i].Title, format);
 
-                    await converter.DownloadAndProcessMediaStreamsAsync(MediaStreamInfos, $"{Path}\\{title}.{format}", format, new Progress<double>((p) => SharedMethods.HandleProgress(p, true)));
+                    client.Videos.DownloadAsync(MediaStreamInfos, new ConversionRequestBuilder($"{Path}\\{title}.{format}")
+                        .SetFormat(format).SetPreset(ConversionPreset.VerySlow).Build(), new Progress<double>((p) =>  SharedMethods.HandleProgress(p, true))).GetAwaiter().GetResult();
                 }
                 catch
                 {

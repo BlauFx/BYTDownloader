@@ -13,11 +13,14 @@ namespace BYTDownloader
             Console.Clear();
             Console.WriteLine("URL: ");
 
+            var id = Console.ReadLine();
+
             YoutubeClient client = new YoutubeClient();
-            var video = client.Videos.GetAsync(Console.ReadLine()).Result;
+            var video = client.Videos.GetAsync(id).Result;
 
             Console.Title = "BYTDownloader | Loading...";
             var manifest = client.Videos.Streams.GetManifestAsync(video.Id).Result;
+
             var allQualities = manifest.GetVideoOnly().ToArray();
 
             for (int i = 0; i < allQualities.Length; i++)
@@ -26,16 +29,13 @@ namespace BYTDownloader
             Console.Title = "BYTDownloader";
             Console.Write("Your answer: ");
 
-            var mediaStreamInfos = new IStreamInfo[]
-            {
-                manifest.GetAudioOnly().WithHighestBitrate(),
-                manifest.GetVideoOnly().ToArray()[int.Parse(Console.ReadLine()!)]
-            };
+            var mediaStreamInfos = new[] { manifest.GetAudioOnly().WithHighestBitrate(), manifest.GetVideoOnly().ToArray()[int.Parse(Console.ReadLine()!)] };
 
             string format = Format.mp4.ToString().ToLower();
             var title = SharedMethods.CheckIfAvailableName(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), video.Title, format);
 
-            new YoutubeConverter(client).DownloadAndProcessMediaStreamsAsync(mediaStreamInfos, $"{Environment.GetFolderPath(Environment.SpecialFolder.Desktop)}\\{title}.{format}", format, new Progress<double>((p) => SharedMethods.HandleProgress(p))).GetAwaiter().GetResult();
+            client.Videos.DownloadAsync(mediaStreamInfos, new ConversionRequestBuilder($"{Environment.GetFolderPath(Environment.SpecialFolder.Desktop)}\\{title}.{format}")
+                .SetFormat(format).SetPreset(ConversionPreset.VerySlow).Build(), new Progress<double>((p) =>  SharedMethods.HandleProgress(p))).GetAwaiter().GetResult();
         }
     }
 }

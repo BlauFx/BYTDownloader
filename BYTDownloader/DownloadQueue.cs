@@ -109,7 +109,9 @@ namespace BYTDownloader
                 try
                 {
                     titles[i] = SharedMethods.CheckIfAvailableName(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), titles[i], format);
-                    new YoutubeConverter(client).DownloadAndProcessMediaStreamsAsync(StreamInfosList[i], $"{Environment.GetFolderPath(Environment.SpecialFolder.Desktop)}\\{titles[i]}.{format}", format, new Progress<double>((p) => SharedMethods.HandleProgress(p, true))).GetAwaiter().GetResult();
+
+                    client.Videos.DownloadAsync(StreamInfosList[i], new ConversionRequestBuilder($"{Environment.GetFolderPath(Environment.SpecialFolder.Desktop)}\\{titles[i]}.{format}")
+                        .SetFormat(format).SetPreset(ConversionPreset.VerySlow).Build(), new Progress<double>((p) =>  SharedMethods.HandleProgress(p))).GetAwaiter().GetResult();
                 }
                 catch
                 {

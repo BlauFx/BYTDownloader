@@ -3,7 +3,6 @@ using System.IO;
 using System.IO.Compression;
 using System.Net.Http;
 using System.Reflection;
-using System.Text;
 
 namespace BYTDownloader
 {
@@ -11,8 +10,6 @@ namespace BYTDownloader
     {
         static void Main()
         {
-            Console.InputEncoding = Encoding.Unicode;
-            Console.OutputEncoding = Encoding.Unicode;
             Console.Title = "BYTDownloader";
 
             if (Directory.Exists("temp"))
@@ -24,24 +21,22 @@ namespace BYTDownloader
             new License();
             Updater updater = new Updater();
 
-
             if (!updater.IsUpdating)
             {
-                var CurrentDirectory = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+                var CurrentDirectory = Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location);
 
                 if (!File.Exists(CurrentDirectory + "\\ffmpeg.exe"))
                 {
                     Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine("ffmpeg.exe not found");
-                    Console.WriteLine("Downloading ffmpeg.exe");
+                    Console.WriteLine("ffmpeg.exe not found\nDownloading ffmpeg.exe");
 
                     using (var fs = new FileStream(CurrentDirectory + "//FFMPEG.zip", FileMode.CreateNew))
                     using (HttpClient httpClient = new HttpClient())
-                        httpClient.GetStreamAsync("https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2020-09-19-12-33/ffmpeg-n4.3.1-17-gdae6d75a31-win64-gpl-4.3.zip")?.Result.CopyTo(fs);
+                        httpClient.GetStreamAsync("https://github.com/ShareX/FFmpeg/releases/download/v4.3.1/ffmpeg-4.3.1-win64.zip")?.Result.CopyTo(fs);
 
                     Directory.CreateDirectory(CurrentDirectory + "//temp");
                     ZipFile.ExtractToDirectory(CurrentDirectory + "//FFMPEG.zip", CurrentDirectory + "//temp");
-                    File.Move(CurrentDirectory + "//temp/ffmpeg-n4.3.1-17-gdae6d75a31-win64-gpl-4.3/bin/ffmpeg.exe", CurrentDirectory + "//ffmpeg.exe");
+                    File.Move(CurrentDirectory + "//temp/ffmpeg.exe", CurrentDirectory + "//ffmpeg.exe");
 
                     Console.WriteLine("ffmpeg.exe downloaded!");
                     Console.ResetColor();
@@ -58,7 +53,6 @@ namespace BYTDownloader
             }
             else
                 Console.ReadLine();
-
         }
 
         private static void INI()
@@ -97,15 +91,15 @@ namespace BYTDownloader
         private static void About()
         {
             Console.Clear();
-
-            Console.WriteLine($"BYTDownloader current version: v{Assembly.GetExecutingAssembly().GetName().Version}\n" +
-                $"Using YoutubeExplode: {Assembly.GetAssembly(typeof(YoutubeExplode.YoutubeClient)).GetName().Version}\n" +
-                $"Using YoutubeExplode.Converter: {Assembly.GetAssembly(typeof(YoutubeExplode.Converter.YoutubeConverter)).GetName().Version}\n" +
-                $"Using FFmpeg.NET: {Assembly.GetAssembly(typeof(FFmpeg.NET.Engine)).GetName().Version}\n" +
+            Console.WriteLine($"BYTDownloader current version: {Assembly.GetExecutingAssembly().GetName().Version}\n" +
+                $"Using YoutubeExplode: {Assembly.GetAssembly(typeof(YoutubeExplode.YoutubeClient))?.GetName().Version}\n" +
+                $"Using YoutubeExplode.Converter: {Assembly.GetAssembly(typeof(YoutubeExplode.Converter.ConversionRequest))?.GetName().Version}\n" +
+                $"Using FFmpeg.NET: {Assembly.GetAssembly(typeof(FFmpeg.NET.Engine))?.GetName().Version}\n" +
                 $"\nPress enter to return to mainmenu");
 
             Console.ReadLine();
             Console.Clear();
+
             INI();
         }
     }
